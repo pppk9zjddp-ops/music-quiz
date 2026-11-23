@@ -220,15 +220,16 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   </div>
   <p class="note" id="artistNote" style="margin-top:6px"></p>
 
-  <h2>Runden</h2>
+  <h2>Spielende</h2>
   <div class="chips" id="roundChips">
-    <button class="chip" data-v="5">5</button><button class="chip on" data-v="10">10</button><button class="chip" data-v="20">20</button>
+    <button class="chip" data-v="s5">5 Songs</button><button class="chip on" data-v="s10">10 Songs</button><button class="chip" data-v="s20">20 Songs</button>
+    <button class="chip pt" data-v="p5">Bis 5 Punkte</button><button class="chip pt" data-v="p10">Bis 10 Punkte</button><button class="chip pt" data-v="p15">Bis 15 Punkte</button>
   </div>
 
   <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
   <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
   <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <p class="note" id="verNote">Version 5</p>
+  <p class="note" id="verNote">Version 6</p>
 </section>
 
 <!-- LOADING -->
@@ -260,7 +261,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     <input type="text" id="bName" maxlength="20" placeholder="z.B. Die Ohrwürmer">
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 5</p>
+    <p class="note">Version 6</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -330,7 +331,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="5";
+const VERSION="6";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -346,8 +347,17 @@ function confetti(color){
   if(m&&m[1]!==VERSION){const d=document.createElement("div");d.style.cssText="position:fixed;left:0;right:0;top:0;z-index:99;background:#ff4d8d;color:#fff;font-weight:800;text-align:center;padding:12px 16px";d.textContent="Neue Version verfügbar. Tippe hier zum Neuladen.";d.onclick=()=>location.replace(location.pathname+"?v="+m[1]+location.search.replace(/^\?/,"&"));document.body.appendChild(d);}
 }catch(e){}})();
 // ---------- Daten ----------
+// Themen-Playlists (Deezer-Redaktion u.a.), "chart" = aktuelle Deezer-Charts
+const PLAYLISTS = {
+  "Party":[2097558104,715215865,1913763402],
+  "Volksfest":[10679486102],
+  "Best of 2026":[2255104706],
+  "Charts aktuell":["chart"],
+  "Ballermann":[4789726188],
+  "Schlager":[8699026122],
+  "Deutschrap":[10578289242]
+};
 const CATS = {
-  "Charts heute":["Dua Lipa","The Weeknd","Ed Sheeran","Taylor Swift","Harry Styles","Billie Eilish","Olivia Rodrigo","Miley Cyrus","Sabrina Carpenter","Bruno Mars","Shirin David","Apache 207"],
   "2010er":["Avicii","Rihanna","Adele","Katy Perry","Lady Gaga","Pharrell Williams","Maroon 5","Robin Schulz","Imagine Dragons","Calvin Harris","Lukas Graham","Mark Forster"],
   "2000er":["Britney Spears","Eminem","Beyoncé","Shakira","Nelly Furtado","Black Eyed Peas","Linkin Park","Coldplay","Juli","Silbermond","Justin Timberlake","Outkast"],
   "90er":["Backstreet Boys","Spice Girls","Nirvana","Oasis","Haddaway","Dr. Alban","Mariah Carey","TLC","Whitney Houston","Scooter","Vengaboys","Die Fantastischen Vier"],
@@ -366,7 +376,7 @@ const TEAM_COLORS = ["var(--t1)","var(--t2)","var(--t3)","var(--t4)"];
 const DEFAULT_TEAMS = ["Team Blau","Team Rot","Team Grün","Team Lila"];
 
 // ---------- Zustand ----------
-const S = {artist:"none",mode:"online",teams:3,cat:"Charts heute",chals:new Set(["classic"]),rounds:10};
+const S = {artist:"none",mode:"online",teams:3,cat:"Party",chals:new Set(["classic"]),end:"s10"};
 let G = null;
 
 // ---------- Setup UI ----------
@@ -383,13 +393,24 @@ function renderTeams(){
   box.innerHTML="";
   for(let i=0;i<S.teams;i++){const inp=document.createElement("input");inp.type="text";inp.id="team"+i;inp.value=old[i]||DEFAULT_TEAMS[i];inp.style.borderLeft="6px solid "+TEAM_COLORS[i];box.appendChild(inp);}
 }
-Object.keys(CATS).forEach(c=>{const b=document.createElement("button");b.className="chip"+(c===S.cat?" on":"");b.dataset.v=c;b.textContent=c;$("catChips").appendChild(b);});
+[...Object.keys(PLAYLISTS),...Object.keys(CATS)].forEach(c=>{const b=document.createElement("button");b.className="chip"+(c===S.cat?" on":"");b.dataset.v=c;b.textContent=c;$("catChips").appendChild(b);});
 Object.entries(CHALLENGES).forEach(([k,v])=>{const b=document.createElement("button");b.className="chip"+(S.chals.has(k)?" on":"");b.dataset.v=k;b.textContent=v.name;$("chalChips").appendChild(b);});
 single("modeChips","mode",()=>$("teamBox").classList.toggle("hide",S.mode!=="party"));
 const isParty=()=>S.mode!=="solo";
 single("teamCount","teams",renderTeams);
 single("catChips","cat",()=>$("customArtists").classList.toggle("hide",S.cat!=="Eigene Künstler"));
-single("roundChips","rounds");
+single("roundChips","end");
+function updEndChips(){
+  const solo=S.mode==="solo";
+  [...$("roundChips").children].forEach(c=>c.classList.toggle("hide",solo&&c.classList.contains("pt")));
+  if(solo&&S.end[0]==="p"){S.end="s10";[...$("roundChips").children].forEach(c=>c.classList.toggle("on",c.dataset.v==="s10"));}
+}
+$("modeChips").addEventListener("click",updEndChips); updEndChips();
+function newGame(pool,players){
+  const n=+S.end.slice(1), byPts=S.end[0]==="p";
+  return {pool,players,round:0,total:byPts?pool.length:Math.min(n,pool.length),goal:byPts?n:0,chals:[...S.chals]};
+}
+function goalReached(){return G.goal>0&&G.players.some(p=>p.pts>=G.goal);}
 const ARTIST_NOTES={none:"Nur der Songtitel zählt.",bonus:"Titel zählt, der Interpret gibt Extrapunkte.",required:"Nur Titel und Interpret zusammen zählen."};
 single("artistChips","artist",()=>$("artistNote").textContent=ARTIST_NOTES[S.artist]);
 $("artistNote").textContent=ARTIST_NOTES[S.artist];
@@ -412,7 +433,7 @@ function jsonp(url,timeout=8000){
     s.src=url+(url.includes("?")?"&":"?")+"callback="+cb; document.head.appendChild(s);
   });
 }
-function clean(t){return t.replace(/\s*[\(\[][^\)\]]*(remaster|version|edit|mix|live|feat|mono|stereo)[^\)\]]*[\)\]]/gi,"").replace(/\s+-\s+.*(remaster|version|edit|mix|live|mono|stereo).*$/i,"").trim();}
+function clean(t){return t.replace(/\s*[\(\[][^\)\]]*(remaster|version|edit|mix|live|feat|mono|stereo|original|aus |from )[^\)\]]*[\)\]]/gi,"").replace(/\s+-\s+.*(remaster|version|edit|mix|live|mono|stereo).*$/i,"").trim();}
 async function itunes(artist){
   const d=await jsonp(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&media=music&entity=song&attribute=artistTerm&limit=25&country=DE`);
   return d.results.filter(r=>r.previewUrl&&r.artistName.toLowerCase().includes(artist.toLowerCase().split(" ")[0]))
@@ -427,7 +448,19 @@ async function fetchArtist(a){
   try{return await deezer(a);}catch(e){return [];}
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+async function deezerPlaylist(id){
+  const url=id==="chart"?"https://api.deezer.com/chart/0/tracks?limit=100&output=jsonp":`https://api.deezer.com/playlist/${id}/tracks?limit=150&output=jsonp`;
+  const d=await jsonp(url,10000);
+  return (d.data||[]).filter(t=>t.preview&&t.readable!==false).map(t=>({title:clean(t.title_short||t.title),artist:t.artist.name,preview:t.preview,cover:t.album&&t.album.cover_medium}));
+}
 async function buildPool(){
+  if(PLAYLISTS[S.cat]){
+    const lists=await Promise.all(PLAYLISTS[S.cat].map(id=>deezerPlaylist(id).catch(()=>[])));
+    const seen=new Set(),pool=[];
+    lists.flat().forEach(t=>{const k=norm(t.title);if(k&&!seen.has(k)){seen.add(k);pool.push(t);}});
+    if(!pool.length) throw new Error("Die Playlist konnte nicht geladen werden. Internet prüfen oder andere Kategorie wählen.");
+    return pool;
+  }
   let artists=CATS[S.cat];
   if(S.cat==="Eigene Künstler") artists=$("customArtists").value.split(",").map(s=>s.trim()).filter(Boolean);
   if(!artists.length) throw new Error("Bitte mindestens einen Künstler eintragen.");
@@ -526,7 +559,7 @@ $("startBtn").onclick=async()=>{
     if(pool.length<3) throw new Error("Zu wenige Songs gefunden. Andere Kategorie oder mehr Künstler probieren.");
     shuffle(pool);
     const players= S.mode==="party"? names.map((n,i)=>({name:n,color:TEAM_COLORS[i],pts:0})) : [{name:"Du",color:"var(--accent)",pts:0}];
-    G={pool,players,round:0,total:Math.min(S.rounds,pool.length),chals:[...S.chals]};
+    G=newGame(pool,players);
     startRound();
   }catch(e){alert(e.message||"Fehler beim Laden der Songs.");show("setup");}
 };
@@ -537,7 +570,7 @@ async function startRound(){
   const chal=G.chals[Math.random()*G.chals.length|0];
   G.cur={track,chal,locked:new Set(),buzzed:null,done:false,buffer:null};
   show("game");
-  $("roundInfo").textContent=`Song ${G.round+1} von ${G.total}`;
+  $("roundInfo").textContent=G.goal?`Song ${G.round+1} · bis ${G.goal} Punkte`:`Song ${G.round+1} von ${G.total}`;
   ["revealPanel","judgePanel"].forEach(id=>$(id).classList.add("hide"));
   $("modBox").innerHTML=MOD_HINT;$("modBox").classList.remove("peek");
   $("playBtn").disabled=true; $("playLabel").textContent="lädt…";
@@ -644,14 +677,14 @@ function reveal(msg){
   $("guessInput").disabled=true; $("artistInput").disabled=true; $("feedback").textContent="";
   const t=G.cur.track; $("revealMsg").textContent=msg; $("rTitle").textContent=t.title; $("rArtist").textContent=t.artist; $("cover").src=t.cover; $("rbg").style.backgroundImage=t.cover?`url("${t.cover}")`:"none";
   $("revealPanel").classList.remove("hide");
-  $("nextBtn").textContent=G.round+1>=G.total?"Zum Ergebnis":"Nächster Song";
+  $("nextBtn").textContent=G.round+1>=G.total||goalReached()?"Zum Ergebnis":"Nächster Song";
   G.cur.result={msg,title:t.title,artist:t.artist};
   renderScore(); if(isParty()) renderBuzzers();
   broadcast();
   // Original zur Auflösung abspielen
   A.pos=0; audioEl.src=t.preview; audioEl.currentTime=0; play(true);
 }
-$("nextBtn").onclick=()=>{G.round++; if(G.round>=G.total)finish(); else startRound();};
+$("nextBtn").onclick=()=>{G.round++; if(G.round>=G.total||goalReached())finish(); else startRound();};
 $("quitBtn").onclick=()=>finish();
 
 function renderScore(){$("scoreBar").innerHTML=G.players.map(p=>`<div style="border-color:${p.color}">${p.name}: ${p.pts}</div>`).join("");}
@@ -757,7 +790,7 @@ function stateFor(i){
   const p=NET.players[i], c=G&&G.cur, b=c&&c.buzzed!=null?NET.players[c.buzzed]:null;
   return {t:"state",phase:phase(),name:p.name,color:p.color,pts:p.pts,locked:!!(c&&c.locked.has(i)),
     buzzed:b?{name:b.name,me:c.buzzed===i}:null,last:c&&c.done?c.result:null,
-    round:G?G.round+1:0,total:G?G.total:0,scores:NET.players.map(x=>({name:x.name,pts:x.pts,color:x.color}))};
+    round:G?G.round+1:0,total:G?G.total:0,goal:G?G.goal:0,scores:NET.players.map(x=>({name:x.name,pts:x.pts,color:x.color}))};
 }
 function broadcast(){
   if(S.mode!=="online"||!NET.client)return;
@@ -774,7 +807,7 @@ $("lobbyStart").onclick=async()=>{
   $("lobbyStart").textContent="Spiel starten";
   if(!Array.isArray(pool)||pool.length<3){alert((pool&&pool.message)||"Zu wenige Songs gefunden.");NET.poolP=buildPool().catch(e=>e);renderLobby();return;}
   shuffle(pool);
-  G={pool,players:NET.players,round:0,total:Math.min(S.rounds,pool.length),chals:[...S.chals]};
+  G=newGame(pool,NET.players);
   startRound();
 };
 $("lobbyBack").onclick=()=>{if(NET.client){NET.client.end(true);NET.client=null;}clearInterval(NET.tick);NET.players=[];show("setup");};
@@ -818,7 +851,7 @@ function initBuzzer(code,bIdx){
     const b=$("bBtn"); b.style.background=st.color; b.disabled=!(st.phase==="playing"&&!st.locked); b.style.filter=me?"none":""; b.textContent=me?"DRAN!":"BUZZ";
     let m="";
     if(st.phase==="lobby") m="Ihr seid drin! Wartet auf den Start.";
-    else if(st.phase==="playing") m=st.locked?"Falsch. Ihr seid für diesen Song raus.":`Song ${st.round} von ${st.total}. Hört genau hin!`;
+    else if(st.phase==="playing") m=st.locked?"Falsch. Ihr seid für diesen Song raus.":(st.goal?`Song ${st.round} · bis ${st.goal} Punkte. Hört genau hin!`:`Song ${st.round} von ${st.total}. Hört genau hin!`);
     else if(st.phase==="buzzed") m=me?"Ihr seid dran! Sagt die Antwort.":`${st.buzzed.name} antwortet…`;
     else if(st.phase==="reveal") m=st.last?`${st.last.msg}\n${st.last.title} von ${st.last.artist}`:"";
     else if(st.phase==="end") m="Spiel vorbei!";

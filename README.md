@@ -10,6 +10,8 @@ Musik-Quiz im Browser: Der Song läuft, wer ihn erkennt, buzzert.
 - **Solo** : Titel (und ggf. Interpret) eintippen, Tippfehler werden toleriert. Je schneller, desto mehr Punkte (100 bis 10). Eigene Bestenliste wird lokal im Browser gespeichert.
 
 ## Einstellungen
+- **Musik:** Themen-Playlists von Deezer (Party, Volksfest, Best of 2026, Charts aktuell, Ballermann, Schlager, Deutschrap) oder Jahrzehnte/Künstler über iTunes.
+- **Spielende:** feste Songanzahl (5/10/20) oder im Multiplayer bis 5/10/15 Punkte.
 - **Interpret:** nicht nötig, Bonus (Party +1, Solo +50 %) oder Pflicht.
 - **Challenges:** Klassisch, Rückwärts, Unter Wasser, Turbo, Zeitlupe.
 
