@@ -289,7 +289,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
   <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
   <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <p class="note" id="verNote">Version 10</p>
+  <p class="note" id="verNote">Version 11</p>
 </section>
 
 <!-- LOADING -->
@@ -333,7 +333,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 10</p>
+    <p class="note">Version 11</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -410,7 +410,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="10";
+const VERSION="11";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -429,12 +429,16 @@ function confetti(color){
 // Themen-Playlists (Deezer-Redaktion u.a.), "chart" = aktuelle Deezer-Charts
 const PLAYLISTS = {
   "Party":[2097558104,715215865,1913763402],
-  "Volksfest":[10679486102],
+  "Volksfest":[10679486102,14215720581],
   "Best of 2026":[2255104706],
   "Charts aktuell":["chart"],
   "Ballermann":[4789726188],
   "Schlager":[8699026122],
   "Deutschrap":[10578289242]
+};
+// Filter pro Thema: Volksfest ohne Blasmusik, Märsche und Medleys
+const BLOCK = {
+  "Volksfest":/prosit|marsch|blaskapelle|blasmusik|musikanten|musikkapelle|polka|böhmisch|egerländer|holzhacker|hofbräuhaus|patrona bavariae|naabtal|wiesen buben|dolomiten sextett|franzl lang|heino|gelben wagen|drobn aufm berg|medley|megamix|party mix/i
 };
 const CATS = {
   "2010er":["Avicii","Rihanna","Adele","Katy Perry","Lady Gaga","Pharrell Williams","Maroon 5","Robin Schulz","Imagine Dragons","Calvin Harris","Lukas Graham","Mark Forster"],
@@ -592,7 +596,8 @@ async function buildPool(){
   if(PLAYLISTS[S.cat]){
     const lists=await Promise.all(PLAYLISTS[S.cat].map(id=>deezerPlaylist(id).catch(()=>[])));
     const seen=new Set(),pool=[];
-    lists.flat().forEach(t=>{const k=norm(t.title);if(k&&!seen.has(k)){seen.add(k);pool.push(t);}});
+    const block=BLOCK[S.cat];
+    lists.flat().forEach(t=>{const k=norm(t.title);if(block&&block.test(t.title+" "+t.artist))return;if(k&&!seen.has(k)){seen.add(k);pool.push(t);}});
     if(!pool.length) throw new Error("Die Playlist konnte nicht geladen werden. Internet prüfen oder andere Kategorie wählen.");
     return shuffle(pool);
   }
