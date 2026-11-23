@@ -289,7 +289,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
   <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
   <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <p class="note" id="verNote">Version 9</p>
+  <p class="note" id="verNote">Version 10</p>
 </section>
 
 <!-- LOADING -->
@@ -333,7 +333,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 9</p>
+    <p class="note">Version 10</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -410,7 +410,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="9";
+const VERSION="10";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -570,16 +570,17 @@ renderAChips();
 
 async function resolveArtist(name){ // Name -> Deezer-Artist (exakter Treffer bevorzugt)
   const d=await jsonp(`https://api.deezer.com/search/artist?q=${encodeURIComponent(name)}&limit=5&output=jsonp`);
-  const list=d.data||[]; const n=norm(name);
-  const a=list.find(x=>norm(x.name)===n)||list.find(x=>isClose(n,norm(x.name)))||null;
+  const list=d.data||[]; const n=norm(name), raw=name.trim().toLowerCase();
+  const best=arr=>arr.sort((x,y)=>(y.nb_fan||0)-(x.nb_fan||0))[0];
+  const a=list.find(x=>x.name.toLowerCase()===raw)||best(list.filter(x=>norm(x.name)===n))||best(list.filter(x=>isClose(n,norm(x.name))))||(list[0]&&list[0].nb_fan>20000?list[0]:null);
   return a&&{id:a.id,name:a.name};
 }
 async function artistTracks(a){ // nur Songs, bei denen genau dieser Künstler Hauptinterpret ist
   let out=[];
   try{const d=await jsonp(`https://api.deezer.com/artist/${a.id}/top?limit=50&output=jsonp`,10000);
     out=(d.data||[]).filter(t=>t.preview&&t.artist&&t.artist.id===a.id).map(t=>({title:clean(t.title_short||t.title),artist:t.artist.name,preview:t.preview,cover:t.album&&t.album.cover_medium}));}catch(e){}
-  if(out.length<3){ // Ersatz: iTunes, aber nur exakt passender Künstlername
-    try{const r=await itunes(a.name); out=out.concat(r.filter(t=>norm(t.artist)===norm(a.name)));}catch(e){}
+  if(out.length<12){ // Ergänzen über iTunes, aber nur exakt passender Künstlername
+    try{const r=await itunes(a.name); out=out.concat(r.filter(t=>t.artist.trim().toLowerCase()===a.name.trim().toLowerCase()));}catch(e){}
   }
   return out;
 }
