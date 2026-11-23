@@ -244,6 +244,33 @@ body.myturn{animation:flash .6s ease-out 3}
 .profpill.synced .pav{box-shadow:0 0 0 2px var(--ok)}
 canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 @media (prefers-reduced-motion:reduce){body::before,.play,.play.playing,.eqi i,body.is-playing .eq i,.bbtn::after,.overlay,.otag,body.myturn{animation:none!important}}
+
+/* Startseite: Karten */
+.scard{margin-top:16px;padding:18px}
+.sh{display:flex;align-items:center;gap:10px;margin:0 0 12px;color:var(--text);font-size:.9rem}
+.sh b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#14101f;font-size:.8rem;letter-spacing:0}
+.scard h3{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin:16px 0 8px;font-weight:700}
+.scard h3:first-of-type{margin-top:4px}
+#teamBox h2{margin-top:16px}
+.mtiles{display:grid;gap:8px}
+.mtile{display:flex;align-items:center;gap:12px;text-align:left;border-radius:16px;padding:12px 14px;width:100%}
+.mtile .mi{font-size:1.5rem;line-height:1}
+.mtile b{display:block;font-size:1rem}.mtile small{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}
+.more{margin-top:14px;border-top:1px solid #ffffff14;padding-top:12px}
+.more summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:700}
+.more summary::-webkit-details-marker{display:none}
+.more summary::after{content:"▾";color:var(--muted);transition:transform .15s}
+.more[open] summary::after{transform:rotate(180deg)}
+.more summary small{color:var(--muted);font-weight:500;margin-left:auto;text-align:right}
+details.scard.more{border-top:1px solid #ffffff14}
+details.scard .board{margin-top:12px}
+.startbar{position:sticky;bottom:0;z-index:5;padding:14px 0 calc(10px + env(safe-area-inset-bottom,0px));margin-top:6px;background:linear-gradient(transparent,var(--bg,#0b0b10) 40%)}
+.startbar .btn{width:100%;font-size:1.1rem;padding:16px}
+@media (min-width:1000px){
+  .wrap:has(#setup:not(.hide)){max-width:1120px}
+  .sgrid{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:start}
+  .startbar{position:static;background:none}
+}
 </style>
 </head>
 <body>
@@ -276,13 +303,15 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <h1 class="logo"><span class="eqi"><i></i><i></i><i></i><i></i></span>Erkennst du<br><span>den Song?</span></h1>
   <p class="sub">Der Song läuft. Wer ihn erkennt, buzzert.</p>
 
-  <h2>Spielmodus</h2>
-  <div class="chips" id="modeChips">
-    <button class="chip on" data-v="online">Party: Handys als Buzzer</button>
-    <button class="chip" data-v="party">Party: ein Gerät</button>
-    <button class="chip" data-v="solo">Solo (Antwort eintippen)</button>
-  </div>
-
+  <div class="sgrid">
+  <div class="scol">
+  <div class="panel scard">
+    <h2 class="sh"><b>1</b>Wie spielt ihr?</h2>
+    <div class="mtiles" id="modeChips">
+      <button class="chip mtile on" data-v="online"><span class="mi">📱</span><span><b>Party mit Handys</b><small>Jedes Team buzzert am eigenen Handy</small></span></button>
+      <button class="chip mtile" data-v="party"><span class="mi">🖥️</span><span><b>Party an einem Gerät</b><small>Alle buzzern an diesem Gerät</small></span></button>
+      <button class="chip mtile" data-v="solo"><span class="mi">🎧</span><span><b>Solo</b><small>Antwort eintippen, Punkte nach Tempo</small></span></button>
+    </div>
   <div id="teamBox" class="hide">
     <h2>Teams</h2>
     <div class="chips" id="teamCount">
@@ -290,9 +319,11 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     </div>
     <div class="teams" id="teamNames" style="margin-top:10px"></div>
   </div>
+  </div>
 
-  <h2>Musik</h2>
-  <div class="chips" id="catChips"></div>
+  <div class="panel scard">
+    <h2 class="sh"><b>2</b>Welche Musik?</h2>
+    <div class="chips" id="catChips"></div>
   <div id="artistPick" class="hide">
     <div class="achips" id="aChips"></div>
     <div class="acwrap">
@@ -301,37 +332,43 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     </div>
     <p class="note" id="aNote">Tippen, dann den richtigen Künstler aus der Liste wählen.</p>
   </div>
-
-  <h2>Challenges</h2>
-  <div class="chips" id="chalChips"></div>
-  <p class="note" style="margin-top:6px" id="chalNote"></p>
-
-  <h2>Schwierigkeit</h2>
-  <div class="chips" id="levelChips">
-    <button class="chip" data-v="1">1 · Nur Hits</button>
-    <button class="chip on" data-v="2">2 · Bekannt</button>
-    <button class="chip" data-v="3">3 · Auch Nischiges</button>
   </div>
-  <p class="note" id="levelNote" style="margin-top:6px"></p>
-
-  <h2>Interpret</h2>
-  <div class="chips" id="artistChips">
-    <button class="chip on" data-v="none">Nicht nötig</button>
-    <button class="chip" data-v="bonus">Bonus</button>
-    <button class="chip" data-v="required">Pflicht</button>
-  </div>
-  <p class="note" id="artistNote" style="margin-top:6px"></p>
-
-  <h2>Spielende</h2>
-  <div class="chips" id="roundChips">
-    <button class="chip" data-v="s5">5 Songs</button><button class="chip on" data-v="s10">10 Songs</button><button class="chip" data-v="s20">20 Songs</button>
-    <button class="chip pt" data-v="p5">Bis 5 Punkte</button><button class="chip pt" data-v="p10">Bis 10 Punkte</button><button class="chip pt" data-v="p15">Bis 15 Punkte</button>
   </div>
 
-  <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
-  <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
-  <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <div style="margin-top:18px"><button type="button" class="btn sec" id="fbOpen">💬 Feedback &amp; Wünsche</button></div>
+  <div class="scol">
+  <div class="panel scard">
+    <h2 class="sh"><b>3</b>Regeln</h2>
+    <h3>Schwierigkeit</h3>
+    <div class="chips" id="levelChips">
+      <button class="chip" data-v="1">1 · Nur Hits</button>
+      <button class="chip on" data-v="2">2 · Bekannt</button>
+      <button class="chip" data-v="3">3 · Auch Nischiges</button>
+    </div>
+    <p class="note" id="levelNote" style="margin-top:6px"></p>
+    <h3>Spielende</h3>
+    <div class="chips" id="roundChips">
+      <button class="chip" data-v="s5">5 Songs</button><button class="chip on" data-v="s10">10 Songs</button><button class="chip" data-v="s20">20 Songs</button>
+      <button class="chip pt" data-v="p5">Bis 5 Punkte</button><button class="chip pt" data-v="p10">Bis 10 Punkte</button><button class="chip pt" data-v="p15">Bis 15 Punkte</button>
+    </div>
+    <details class="more" id="moreSet">
+      <summary><span>Mehr Einstellungen</span><small id="moreSum"></small></summary>
+      <h3>Interpret</h3>
+      <div class="chips" id="artistChips">
+        <button class="chip on" data-v="none">Nicht nötig</button>
+        <button class="chip" data-v="bonus">Bonus</button>
+        <button class="chip" data-v="required">Pflicht</button>
+      </div>
+      <p class="note" id="artistNote" style="margin-top:6px"></p>
+      <h3>Challenges</h3>
+      <div class="chips" id="chalChips"></div>
+      <p class="note" style="margin-top:6px" id="chalNote"></p>
+    </details>
+  </div>
+
+  <div class="startbar"><button class="btn" id="startBtn">Spiel starten</button></div>
+  <details class="panel scard more hide" id="boardBox"><summary><span>🏆 Deine Bestenliste</span><small id="boardCount"></small></summary><ol class="board" id="boardSetup"></ol></details>
+  <p class="note">Ton anmachen! Gespielt werden offizielle 30-Sekunden-Vorschauen in Schleife, bis jemand buzzert.</p>
+  <div style="margin-top:14px"><button type="button" class="btn sec" id="fbOpen">💬 Feedback &amp; Wünsche</button></div>
   <div class="panel hide" id="fbPanel" style="margin-top:12px">
     <h2 style="margin-top:0">Feedback &amp; Wünsche</h2>
     <div class="chips" id="fbType"><button type="button" class="chip on" data-v="idee">Feature-Wunsch</button><button type="button" class="chip" data-v="feedback">Feedback</button><button type="button" class="chip" data-v="bug">Fehler</button></div>
@@ -340,7 +377,9 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn" id="fbSend">Absenden</button><button type="button" class="btn sec" id="fbClose">Schließen</button></div>
     <p class="note" id="fbMsg"></p>
   </div>
-  <p class="note" id="verNote">Version 21</p>
+  </div>
+  </div>
+  <p class="note" id="verNote">Version 22</p>
 </section>
 
 <!-- LOADING -->
@@ -384,7 +423,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 21</p>
+    <p class="note">Version 22</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -464,7 +503,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="21";
+const VERSION="22";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -557,7 +596,9 @@ single("levelChips","level",()=>{$("levelNote").textContent=LEVEL_NOTES[S.level]
 $("levelNote").textContent=LEVEL_NOTES[S.level];
 single("artistChips","artist",()=>$("artistNote").textContent=ARTIST_NOTES[S.artist]);
 $("artistNote").textContent=ARTIST_NOTES[S.artist];
-function updBoardBox(){$("boardBox").classList.toggle("hide",S.mode!=="solo"||!loadBoard().length);renderBoard("boardSetup");}
+function updBoardBox(){const n=loadBoard().length;$("boardBox").classList.toggle("hide",S.mode!=="solo"||!n);$("boardCount").textContent=n?`Bestwert ${loadBoard()[0].pts}`:"";renderBoard("boardSetup");}
+function updMoreSum(){const sp=[...S.chals].filter(k=>k!=="classic");$("moreSum").textContent={none:"Nur Titel",bonus:"Interpret Bonus",required:"Interpret Pflicht"}[S.artist]+" · "+(sp.length?sp.map(k=>CHALLENGES[k].name).join(", "):"Klassisch");}
+document.addEventListener("click",e=>{if(e.target.closest("#artistChips,#chalChips"))setTimeout(updMoreSum);});
 $("modeChips").addEventListener("click",updBoardBox);
 // Klassisch ist immer an. Gewählte Spezial-Challenges kommen bei etwa jedem 5. Song.
 function chalNote(){const sp=[...S.chals].filter(k=>k!=="classic");
@@ -566,7 +607,7 @@ $("chalChips").addEventListener("click",e=>{const b=e.target.closest(".chip");if
   if(k==="classic")return;
   if(S.chals.has(k))S.chals.delete(k);else S.chals.add(k);
   b.classList.toggle("on",S.chals.has(k));chalNote();});
-chalNote();
+chalNote(); updMoreSum();
 renderTeams();
 
 // ---------- Musikquellen (JSONP, kein Server nötig) ----------
