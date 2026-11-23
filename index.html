@@ -3,8 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#14111f">
-<title>Ohrwurm</title>
+<meta name="theme-color" content="#0e0b1a">
+<title>Erkennst du den Song?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;600;800&display=swap">
 <style>
 :root{
   --bg:#14111f;--panel:#1f1a30;--panel2:#2a2342;--text:#f4f1ff;--muted:#a79fc4;
@@ -73,6 +75,110 @@ input[type=text]:focus{outline:none;border-color:var(--accent)}
 .bmsg{text-align:center;font-size:1.3rem;font-weight:800;min-height:3em}
 .off{opacity:.45}
 @media (prefers-reduced-motion:reduce){.play.playing,.spinner,.shake{animation:none}}
+
+/* ---------- Look v4 ---------- */
+:root{--bg:#0e0b1a;--panel:#1a1530cc;--panel2:#2c2450;--accent:#ffd23f;--accent2:#ff3d7f;--violet:#7b5cff;--display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif}
+html,body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{background:var(--bg);overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;background:
+  radial-gradient(40% 35% at 15% 10%,#7b5cff55,transparent 70%),
+  radial-gradient(35% 30% at 90% 20%,#ff3d7f44,transparent 70%),
+  radial-gradient(45% 40% at 60% 100%,#ffd23f22,transparent 70%);animation:drift 18s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(4%,-3%) rotate(6deg)}}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1.logo{font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,10vw,3.6rem);line-height:.95;letter-spacing:-.03em;margin:14px 0 6px;text-wrap:balance}
+h1.logo span:not(.eqi){background:linear-gradient(90deg,var(--accent),var(--accent2) 60%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.eqi{display:inline-flex;gap:4px;align-items:flex-end;height:.55em;margin-right:.25em;vertical-align:.08em}
+.eqi i{display:block;width:.12em;background:var(--accent);border-radius:3px;animation:eqb 1s ease-in-out infinite}
+.eqi i:nth-child(2){animation-delay:-.3s;background:var(--accent2)}.eqi i:nth-child(3){animation-delay:-.6s;background:var(--violet)}.eqi i:nth-child(4){animation-delay:-.15s}
+@keyframes eqb{0%,100%{height:25%}50%{height:100%}}
+h2{font-family:var(--display);letter-spacing:.12em;font-size:.8rem}
+.chip{backdrop-filter:blur(8px);transition:transform .12s,border-color .12s}
+.chip:active{transform:scale(.95)}
+.chip.on{border-color:var(--accent);background:#ffd23f1f;color:#fff}
+.btn{font-family:var(--display);font-weight:800;letter-spacing:.01em;background:linear-gradient(135deg,var(--accent),#ffb02e);box-shadow:0 8px 30px #ffd23f33,inset 0 -3px 0 #0002;transition:transform .1s}
+.btn:active:not(:disabled){transform:translateY(2px) scale(.99)}
+.btn.sec{background:#ffffff12;box-shadow:none;border:1px solid #ffffff1f}
+.panel{background:var(--panel);backdrop-filter:blur(14px);border:1px solid #ffffff14}
+.badge{background:linear-gradient(90deg,var(--accent2),var(--violet));font-family:var(--display);letter-spacing:.04em}
+/* Schallplatte */
+.stage{display:flex;flex-direction:column;align-items:center;margin:10px 0 6px}
+.play{width:min(62vw,250px);height:auto;aspect-ratio:1;border-radius:50%;margin:14px auto 10px;position:relative;
+  background:radial-gradient(circle,#0000 0 31%,#0b0b10 31.5%),repeating-radial-gradient(circle,#15131d 0 2px,#0c0b12 2px 4px);
+  box-shadow:0 20px 60px #000a,0 0 0 6px #ffffff0d,inset 0 0 0 2px #ffffff10;color:#14101f;animation:spin 2.4s linear infinite;animation-play-state:paused}
+.play::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 30deg,#fff0 0 10%,#ffffff22 14%,#fff0 20% 60%,#ffffff18 64%,#fff0 70%);pointer-events:none}
+.play.playing{animation:spin 2.4s linear infinite;box-shadow:0 20px 80px #7b5cff55,0 0 0 6px #ffffff14}
+@keyframes spin{to{transform:rotate(360deg)}}
+.vlabel{position:absolute;inset:34%;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#0b0b10 0 6%,transparent 6.5%),linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:inset 0 0 0 3px #0002}
+.vlabel svg{width:42%;height:42%}
+.play:disabled{opacity:.6}
+.eq{display:flex;gap:4px;align-items:flex-end;height:34px;margin:2px 0 6px}
+.eq i{width:6px;height:15%;border-radius:3px;background:linear-gradient(var(--accent),var(--accent2));transition:height .3s}
+body.is-playing .eq i{animation:eqb .9s ease-in-out infinite}
+.eq i:nth-child(3n){animation-delay:-.2s!important}.eq i:nth-child(3n+1){animation-delay:-.5s!important;animation-duration:.7s!important}.eq i:nth-child(4n){animation-delay:-.35s!important;animation-duration:1.1s!important}
+.timer{font-family:var(--display);font-weight:600;letter-spacing:.04em}
+/* Teams */
+.buzz{position:relative;overflow:hidden;font-family:var(--display);box-shadow:inset 0 -6px 0 #0003,0 10px 30px #0005}
+.buzz::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,#ffffff33,transparent 45%)}
+.score div{backdrop-filter:blur(8px);font-variant-numeric:tabular-nums}
+/* Buzzer-Overlay beim Moderator */
+.overlay{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;
+  padding:max(24px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--tc,#ff3d7f) 85%,#fff),var(--tc,#ff3d7f) 45%,color-mix(in srgb,var(--tc,#ff3d7f) 45%,#000));color:#fff;animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(1.15);opacity:0}}
+.otag{font-family:var(--display);font-weight:800;letter-spacing:.3em;font-size:1rem;background:#0003;padding:6px 14px;border-radius:999px;animation:blink .5s steps(2) 4}
+@keyframes blink{50%{opacity:.2}}
+.oname{font-family:var(--display);font-weight:800;font-size:clamp(3rem,16vw,7rem);line-height:.9;letter-spacing:-.03em;text-shadow:0 6px 0 #0003;word-break:break-word}
+.osub{font-size:1.2rem;font-weight:600;opacity:.9;margin-bottom:10px}
+.oans{background:#0004;border-radius:14px;padding:10px 16px;margin-bottom:18px;font-size:.95rem;max-width:460px}
+.overlay .btn{box-shadow:0 8px 24px #0004}
+/* Auflösung */
+.revealp{position:relative;overflow:hidden}
+.rbg{position:absolute;inset:-20px;background-size:cover;background-position:center;filter:blur(30px) saturate(1.4);opacity:.45;z-index:0}
+.revealp>*:not(.rbg){position:relative;z-index:1}
+.reveal img{width:110px;height:110px;box-shadow:0 10px 30px #0008;animation:pop .4s ease-out}
+.reveal .t{font-family:var(--display);font-size:1.35rem}
+.big{font-family:var(--display)}
+.winner{font-family:var(--display);font-weight:800;font-size:2rem;margin:4px 0 14px;color:var(--accent)}
+.final li{background:var(--panel);backdrop-filter:blur(10px);font-family:var(--display)}
+.final li:first-child{font-size:1.4rem;box-shadow:0 0 0 2px var(--accent),0 10px 40px #ffd23f33}
+/* Lobby */
+.code{font-family:var(--display);background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;font-size:3.2rem}
+.qr{box-shadow:0 0 0 6px #ffffff14,0 20px 60px #7b5cff44}
+.lteams div{animation:pop .4s cubic-bezier(.2,1.6,.4,1);font-family:var(--display)}
+/* Team-Handy */
+#buzzer{min-height:calc(100dvh - 60px);display:flex;flex-direction:column}
+body.team{background:radial-gradient(120% 80% at 50% 40%,color-mix(in srgb,var(--team) 35%,#0e0b1a),#0e0b1a 70%)}
+body.team::before{display:none}
+.bbtn{position:relative;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--team,#ff3d7f) 60%,#fff),var(--team,#ff3d7f) 45%,color-mix(in srgb,var(--team,#ff3d7f) 60%,#000))!important;
+  box-shadow:inset 0 -16px 0 #0004,inset 0 10px 20px #fff4,0 18px 0 color-mix(in srgb,var(--team,#ff3d7f) 40%,#000),0 30px 60px #000a;font-family:var(--display);font-size:3rem;text-shadow:0 4px 0 #0003;transition:transform .08s,box-shadow .08s}
+.bbtn:active:not(:disabled){transform:translateY(12px);box-shadow:inset 0 -10px 0 #0004,inset 0 10px 20px #fff4,0 6px 0 color-mix(in srgb,var(--team,#ff3d7f) 40%,#000),0 14px 30px #000a}
+.bbtn:not(:disabled)::after{content:"";position:absolute;inset:-14px;border-radius:50%;border:4px solid var(--team,#ff3d7f);animation:ring 1.4s ease-out infinite;pointer-events:none}
+@keyframes ring{from{transform:scale(.92);opacity:.9}to{transform:scale(1.15);opacity:0}}
+body.myturn{animation:flash .6s ease-out 3}
+@keyframes flash{50%{background:var(--team)}}
+.bmsg{font-family:var(--display)}
+#bTeam{font-family:var(--display);font-size:1.5rem!important}
+.play.playing .vlabel svg{animation:spin 2.4s linear infinite reverse}
+.obtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;width:min(520px,100%)}
+.ohint{font-weight:700;opacity:.9;margin-bottom:4px}
+.guess{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:12px}
+.guess.title-only{grid-template-columns:1fr auto}
+.guess.title-only #artistInput{display:none}
+@media (max-width:480px){.guess{grid-template-columns:1fr}.guess.title-only{grid-template-columns:1fr auto}}
+.speed{display:flex;justify-content:center;align-items:baseline;gap:10px;font-family:var(--display)}
+.speed span{color:var(--muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.12em}
+.speed b{font-size:2.4rem;font-variant-numeric:tabular-nums;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;min-width:3ch;text-align:left}
+.board{list-style:none;padding:0;margin:0;counter-reset:b}
+.board li{counter-increment:b;display:grid;grid-template-columns:2.2em 1fr auto;gap:8px;align-items:center;background:var(--panel);border-radius:12px;padding:10px 12px;margin:6px 0;font-variant-numeric:tabular-nums}
+.board li::before{content:counter(b);font-family:var(--display);font-weight:800;color:var(--muted)}
+.board li b{font-family:var(--display);font-size:1.1rem}
+.board li small{color:var(--muted);display:block}
+.board li.me{box-shadow:0 0 0 2px var(--accent);background:#ffd23f1a}
+.mod{user-select:none;-webkit-user-select:none;touch-action:none}
+.mod.peek{border-style:solid;border-color:var(--accent);color:var(--text);background:#ffd23f14}
+canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+@media (prefers-reduced-motion:reduce){body::before,.play,.play.playing,.eqi i,body.is-playing .eq i,.bbtn::after,.overlay,.otag,body.myturn{animation:none!important}}
 </style>
 </head>
 <body>
@@ -80,7 +186,7 @@ input[type=text]:focus{outline:none;border-color:var(--accent)}
 
 <!-- SETUP -->
 <section id="setup">
-  <h1>Ohr<span>wurm</span></h1>
+  <h1 class="logo"><span class="eqi"><i></i><i></i><i></i><i></i></span>Erkennst du<br><span>den Song?</span></h1>
   <p class="sub">Der Song läuft. Wer ihn erkennt, buzzert.</p>
 
   <h2>Spielmodus</h2>
@@ -106,14 +212,23 @@ input[type=text]:focus{outline:none;border-color:var(--accent)}
   <div class="chips" id="chalChips"></div>
   <p class="note" style="margin-top:6px">Pro Song wird zufällig eine der gewählten Varianten gespielt.</p>
 
+  <h2>Interpret</h2>
+  <div class="chips" id="artistChips">
+    <button class="chip on" data-v="none">Nicht nötig</button>
+    <button class="chip" data-v="bonus">Bonus</button>
+    <button class="chip" data-v="required">Pflicht</button>
+  </div>
+  <p class="note" id="artistNote" style="margin-top:6px"></p>
+
   <h2>Runden</h2>
   <div class="chips" id="roundChips">
     <button class="chip" data-v="5">5</button><button class="chip on" data-v="10">10</button><button class="chip" data-v="20">20</button>
   </div>
 
   <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
+  <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
   <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <p class="note" id="verNote">Version 3</p>
+  <p class="note" id="verNote">Version 5</p>
 </section>
 
 <!-- LOADING -->
@@ -124,7 +239,7 @@ input[type=text]:focus{outline:none;border-color:var(--accent)}
 
 <!-- LOBBY (Moderator) -->
 <section id="lobby" class="hide">
-  <h1>Ohr<span>wurm</span></h1>
+  <h1 class="logo"><span class="eqi"><i></i><i></i><i></i><i></i></span>Erkennst du<br><span>den Song?</span></h1>
   <p class="sub">Teams scannen den Code mit dem Handy und geben ihren Teamnamen ein.</p>
   <div class="qr" id="qr"></div>
   <div class="code" id="lobbyCode">····</div>
@@ -139,13 +254,13 @@ input[type=text]:focus{outline:none;border-color:var(--accent)}
 <!-- BUZZER (Team-Handy) -->
 <section id="buzzer" class="hide">
   <div id="bJoin">
-    <h1>Ohr<span>wurm</span></h1>
+    <h1 class="logo"><span class="eqi"><i></i><i></i><i></i><i></i></span>Erkennst du<br><span>den Song?</span></h1>
     <p class="sub">Raum <b id="bCode"></b></p>
     <h2>Teamname</h2>
     <input type="text" id="bName" maxlength="20" placeholder="z.B. Die Ohrwürmer">
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 3</p>
+    <p class="note">Version 5</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -159,31 +274,41 @@ input[type=text]:focus{outline:none;border-color:var(--accent)}
 <section id="game" class="hide">
   <div class="top"><span><span id="roundInfo"></span> <span id="roomInfo"></span></span><button class="chip" id="quitBtn" style="padding:5px 12px">Beenden</button></div>
   <div class="challenge"><span class="badge" id="chalName"></span><div class="desc" id="chalDesc"></div></div>
-  <button class="play" id="playBtn"><svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span id="playLabel">Abspielen</span></button>
-  <div class="timer" id="timer">0:00</div>
+  <div class="stage">
+    <button class="play" id="playBtn" aria-label="Abspielen oder pausieren"><span class="vlabel"><svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></button>
+    <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="timer"><span id="playLabel">Abspielen</span> · <span id="timer">0:00</span></div>
+  </div>
 
   <!-- Party -->
   <div id="partyArea">
     <div class="buzzers" id="buzzers"></div>
-    <div class="panel hide" id="judgePanel">
-      <div class="big" id="judgeTitle"></div>
-      <div class="row"><button class="btn" style="background:var(--ok)" id="rightBtn">Richtig</button><button class="btn" style="background:var(--bad);color:#fff" id="wrongBtn">Falsch</button></div>
+    <div class="overlay hide" id="judgePanel">
+      <div class="otag">BUZZER!</div>
+      <div class="oname" id="judgeTitle"></div>
+      <div class="osub">sagt die Antwort</div>
+      <div class="oans" id="judgeAns"></div>
+      <div class="ohint" id="judgeHint"></div>
+      <div class="obtns"><button class="btn" style="background:var(--ok)" id="rightBtn">Richtig</button><button class="btn hide" style="background:#ffd23f" id="rightBothBtn">Titel + Interpret</button><button class="btn" style="background:var(--bad);color:#fff" id="wrongBtn">Falsch</button></div>
     </div>
-    <div class="mod" id="modBox">Moderator: tippen, um die Lösung zu sehen</div>
+    <div class="mod" id="modBox">Moderator: Enter gedrückt halten für die Lösung</div>
     <div style="margin-top:10px"><button class="btn sec" id="revealBtn">Keiner weiß es, auflösen</button></div>
   </div>
 
   <!-- Solo -->
   <div id="soloArea" class="hide">
-    <form id="guessForm" class="row" style="margin-top:14px" autocomplete="off">
-      <input type="text" id="guessInput" placeholder="Songtitel eintippen" style="flex:3">
-      <button class="btn" type="submit" style="flex:1">Raten</button>
+    <div class="speed" id="speed"><span>Punkte jetzt</span><b id="speedPts">100</b></div>
+    <form id="guessForm" class="guess" autocomplete="off">
+      <input type="text" id="guessInput" placeholder="Songtitel" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <input type="text" id="artistInput" placeholder="Interpret" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button class="btn" type="submit">Raten</button>
     </form>
+    <p class="note" style="text-align:center">Enter: abschicken · Umschalt+Enter: abschicken und bei Treffer direkt weiter</p>
     <div class="feedback" id="feedback"></div>
     <div style="margin-top:8px"><button class="btn sec" id="skipBtn">Aufgeben, auflösen</button></div>
   </div>
 
-  <div class="panel hide" id="revealPanel">
+  <div class="panel revealp hide" id="revealPanel"><div class="rbg" id="rbg"></div>
     <div class="big" id="revealMsg"></div>
     <div class="reveal"><img id="cover" alt=""><div><div class="t" id="rTitle"></div><div class="a" id="rArtist"></div></div></div>
     <div style="margin-top:14px"><button class="btn" id="nextBtn">Nächster Song</button></div>
@@ -194,9 +319,10 @@ input[type=text]:focus{outline:none;border-color:var(--accent)}
 
 <!-- END -->
 <section id="end" class="hide">
-  <h1>Ende<span>!</span></h1>
-  <p class="sub" id="winner"></p>
+  <h1 class="logo" id="endTitle">Und der Sieg<br><span>geht an…</span></h1>
+  <p class="winner" id="winner"></p>
   <ul class="final" id="finalList"></ul>
+  <div id="boardEnd" class="hide"><h2>Deine Bestenliste</h2><ol class="board" id="boardList"></ol></div>
   <button class="btn" id="againBtn">Nochmal</button>
 </section>
 
@@ -204,7 +330,15 @@ input[type=text]:focus{outline:none;border-color:var(--accent)}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="3";
+const VERSION="5";
+function confetti(color){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
+  const x=c.getContext("2d"),cols=[color&&!color.startsWith("var")?color:"#ffd23f","#ff3d7f","#7b5cff","#3ddc97","#ffffff"];
+  const ps=Array.from({length:140},()=>({x:c.width/2,y:c.height*.45,vx:(Math.random()-.5)*16,vy:-Math.random()*16-4,r:Math.random()*6+4,a:Math.random()*6,va:(Math.random()-.5)*.4,c:cols[Math.random()*cols.length|0]}));
+  let f=0;(function tick(){x.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.vy+=.45;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.a+=p.va;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;x.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);x.restore();});
+    if(++f<120)requestAnimationFrame(tick);else c.remove();})();
+}
 // Veraltete Version im Browser-Cache erkennen und Hinweis zeigen
 (async()=>{try{if(location.protocol==="file:")return;
   const r=await fetch(location.pathname+"?nocache="+Date.now(),{cache:"no-store"});const t=await r.text();
@@ -232,7 +366,7 @@ const TEAM_COLORS = ["var(--t1)","var(--t2)","var(--t3)","var(--t4)"];
 const DEFAULT_TEAMS = ["Team Blau","Team Rot","Team Grün","Team Lila"];
 
 // ---------- Zustand ----------
-const S = {mode:"online",teams:3,cat:"Charts heute",chals:new Set(["classic"]),rounds:10};
+const S = {artist:"none",mode:"online",teams:3,cat:"Charts heute",chals:new Set(["classic"]),rounds:10};
 let G = null;
 
 // ---------- Setup UI ----------
@@ -256,6 +390,11 @@ const isParty=()=>S.mode!=="solo";
 single("teamCount","teams",renderTeams);
 single("catChips","cat",()=>$("customArtists").classList.toggle("hide",S.cat!=="Eigene Künstler"));
 single("roundChips","rounds");
+const ARTIST_NOTES={none:"Nur der Songtitel zählt.",bonus:"Titel zählt, der Interpret gibt Extrapunkte.",required:"Nur Titel und Interpret zusammen zählen."};
+single("artistChips","artist",()=>$("artistNote").textContent=ARTIST_NOTES[S.artist]);
+$("artistNote").textContent=ARTIST_NOTES[S.artist];
+function updBoardBox(){$("boardBox").classList.toggle("hide",S.mode!=="solo"||!loadBoard().length);renderBoard("boardSetup");}
+$("modeChips").addEventListener("click",updBoardBox);
 $("chalChips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;const k=b.dataset.v;
   if(S.chals.has(k)){if(S.chals.size>1)S.chals.delete(k);}else S.chals.add(k);
   b.classList.toggle("on",S.chals.has(k));});
@@ -314,6 +453,11 @@ function isClose(guess,target){
   if(target.length>=4 && guess.includes(target)) return true;
   return false;
 }
+function checkArtist(raw,track){
+  const g=norm(raw); if(!g) return false;
+  const parts=[track.artist,...track.artist.split(/\s*(?:,|&|\bfeat\.?|\bft\.?|\bx\b|\bund\b|\band\b)\s*/i)].map(norm).filter(Boolean);
+  return parts.some(p=>isClose(g,p)||(g.length>=4&&p.startsWith(g+" "))||isClose(g.replace(/^die /,""),p.replace(/^die /,"")));
+}
 function checkGuess(raw,track){
   const g=norm(raw); const full=norm(track.title); const short=norm(track.title.replace(/\(.*?\)/g,""));
   return isClose(g,full)||isClose(g,short);
@@ -359,11 +503,14 @@ function pause(){
   clearInterval(A.tick); A.playing=false; setPlayUI();
 }
 function resetAudio(){pause(); A.pos=0; A.elapsed=0; audioEl.removeAttribute("src"); audioEl.load(); renderTimer();}
-function renderTimer(){const s=Math.floor(A.elapsed);$("timer").textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;}
+function speedPoints(){return Math.max(10,Math.round(100-A.elapsed*3));}
+function renderTimer(){
+  if(S.mode==="solo"&&G&&G.cur&&!G.cur.done){$("speedPts").textContent=speedPoints();}const s=Math.floor(A.elapsed);$("timer").textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;}
 function setPlayUI(){
+  document.body.classList.toggle("is-playing",A.playing);
   $("playBtn").classList.toggle("playing",A.playing);
   $("playIcon").innerHTML=A.playing?'<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>':'<path d="M8 5v14l11-7z"/>';
-  $("playLabel").textContent=A.playing?"Pause":(A.elapsed>0?"Weiter":"Abspielen");
+  $("playLabel").textContent=A.playing?"Läuft":(A.elapsed>0?"Pausiert":"Abspielen");
 }
 
 // ---------- Spiel ----------
@@ -392,7 +539,7 @@ async function startRound(){
   show("game");
   $("roundInfo").textContent=`Song ${G.round+1} von ${G.total}`;
   ["revealPanel","judgePanel"].forEach(id=>$(id).classList.add("hide"));
-  $("modBox").innerHTML="Moderator: tippen, um die Lösung zu sehen";
+  $("modBox").innerHTML=MOD_HINT;$("modBox").classList.remove("peek");
   $("playBtn").disabled=true; $("playLabel").textContent="lädt…";
   if(CHALLENGES[chal].buf){
     try{const b=await loadBuffer(track.preview); G.cur.buffer=b; if(chal==="reverse")G.cur.rev=reversed(b);}
@@ -404,7 +551,9 @@ async function startRound(){
   const party=isParty();
   $("partyArea").classList.toggle("hide",!party); $("soloArea").classList.toggle("hide",party);
   if(party){renderBuzzers();$("revealBtn").classList.remove("hide");$("modBox").classList.remove("hide");}
-  else{$("guessInput").value="";$("feedback").textContent="";$("guessInput").disabled=false;}
+  else{$("guessInput").value="";$("artistInput").value="";$("feedback").textContent="";$("guessInput").disabled=false;$("artistInput").disabled=false;
+    $("guessForm").classList.toggle("title-only",S.artist==="none");
+    $("artistInput").placeholder=S.artist==="bonus"?"Interpret (Bonus)":"Interpret";$("speedPts").textContent="100";}
   $("roomInfo").textContent=S.mode==="online"?"· Raum "+NET.code:"";
   broadcast();
   play();
@@ -425,37 +574,75 @@ function renderBuzzers(){
 function buzz(i){
   if(G.cur.done||G.cur.locked.has(i)||G.cur.buzzed!=null)return;
   pause(); G.cur.buzzed=i; beep();
-  $("judgeTitle").innerHTML=`<span style="color:${G.players[i].color}">${G.players[i].name}</span> sagt die Antwort!`;
+  $("judgePanel").style.setProperty("--tc",G.players[i].color);
+  $("judgeTitle").textContent=G.players[i].name;
+  $("judgeAns").innerHTML=`Lösung: <b>${esc(G.cur.track.title)}</b> von <b>${esc(G.cur.track.artist)}</b>`;
+  $("judgeHint").textContent=S.artist==="required"?"Titel UND Interpret müssen genannt werden":S.artist==="bonus"?"Interpret dazu gibt +1 Bonus":"";
+  $("rightBtn").textContent=S.artist==="required"?"Beides richtig":S.artist==="bonus"?"Nur Titel (+1)":"Richtig";
+  $("rightBothBtn").textContent="Titel + Interpret (+2)";
+  $("rightBothBtn").classList.toggle("hide",S.artist!=="bonus");
   $("judgePanel").classList.remove("hide"); $("revealBtn").classList.add("hide");
   broadcast();
 }
-$("modBox").onclick=()=>{if(G.cur.done)return;const t=G.cur.track;$("modBox").innerHTML=`Lösung: <b>${t.title}</b> von <b>${t.artist}</b>`;};
-$("rightBtn").onclick=()=>{const i=G.cur.buzzed;G.players[i].pts++;G.cur.buzzed=null;reveal(`${G.players[i].name} hat es! +1 Punkt`);};
+// Lösung nur sichtbar, solange Enter (oder der Finger auf dem Feld) gedrückt ist
+const MOD_HINT="Moderator: Enter gedrückt halten (oder hier drücken und halten) für die Lösung";
+function showAnswer(on){if(!G||!G.cur)return;const t=G.cur.track;$("modBox").classList.toggle("peek",on);
+  $("modBox").innerHTML=on?`<b>${esc(t.title)}</b> von <b>${esc(t.artist)}</b>`:MOD_HINT;}
+$("modBox").addEventListener("pointerdown",e=>{e.preventDefault();showAnswer(true);});
+["pointerup","pointerleave","pointercancel"].forEach(ev=>$("modBox").addEventListener(ev,()=>showAnswer(false)));
+$("modBox").addEventListener("contextmenu",e=>e.preventDefault());
+function partyRight(pts){const i=G.cur.buzzed;confetti(G.players[i].color);G.players[i].pts+=pts;G.cur.buzzed=null;reveal(`${G.players[i].name} hat es! +${pts} ${pts===1?"Punkt":"Punkte"}`);}
+$("rightBtn").onclick=()=>partyRight(1);
+$("rightBothBtn").onclick=()=>partyRight(2);
 $("wrongBtn").onclick=()=>{const i=G.cur.buzzed;G.cur.locked.add(i);G.cur.buzzed=null;$("judgePanel").classList.add("hide");
   if(G.cur.locked.size>=G.players.length){reveal("Keiner hatte es!");return;}
   $("revealBtn").classList.remove("hide");renderBuzzers();play();broadcast();};
 $("revealBtn").onclick=()=>reveal("Aufgelöst");
+document.addEventListener("keyup",e=>{if(e.key==="Enter"&&isParty())showAnswer(false);});
 document.addEventListener("keydown",e=>{
   if(!G||$("game").classList.contains("hide")||e.target.tagName==="INPUT")return;
+  if(e.key==="Enter"){
+    if(isParty()&&!G.cur.done&&$("judgePanel").classList.contains("hide")){e.preventDefault();if(!e.repeat)showAnswer(true);return;}
+    if(G.cur.done&&!$("revealPanel").classList.contains("hide")&&!e.repeat){e.preventDefault();$("nextBtn").click();return;}
+  }
   const n=+e.key; if(S.mode==="party"&&n>=1&&n<=G.players.length)buzz(n-1);
   if(e.key===" "){e.preventDefault();$("playBtn").click();}
 });
 
 // Solo
+let autoNext=false;
+["guessInput","artistInput"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter"){autoNext=e.shiftKey;}}));
 $("guessForm").addEventListener("submit",e=>{
   e.preventDefault(); if(G.cur.done) return;
-  const v=$("guessInput").value.trim(); if(!v) return;
-  if(checkGuess(v,G.cur.track)){G.players[0].pts++;reveal("Richtig! +1 Punkt");}
-  else{const f=$("feedback");f.textContent=`„${v}“ ist es nicht. Weiter hören!`;f.className="feedback bad";
-    $("guessInput").classList.remove("shake");void $("guessInput").offsetWidth;$("guessInput").classList.add("shake");$("guessInput").select();}
+  const v=$("guessInput").value.trim(), va=$("artistInput").value.trim();
+  const goNext=autoNext; autoNext=false;
+  if(!v&&!va) return;
+  const t=G.cur.track, okT=checkGuess(v,t), okA=S.artist!=="none"&&checkArtist(va,t);
+  const sec=A.elapsed, base=speedPoints();
+  const f=$("feedback");
+  const wrong=(id,txt)=>{f.textContent=txt;f.className="feedback bad";const el=$(id);el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake");el.select();};
+  if(S.artist==="required"){
+    if(okT&&okA){confetti();G.players[0].pts+=base;G.cur.solved=true;reveal(`Richtig! +${base} Punkte in ${sec.toFixed(1).replace(".",",")} s`);if(goNext)quickNext();}
+    else if(okT){f.textContent="Titel stimmt! Jetzt noch der Interpret.";f.className="feedback ok";$("artistInput").focus();}
+    else if(okA){f.textContent="Interpret stimmt! Jetzt noch der Titel.";f.className="feedback ok";$("guessInput").focus();}
+    else wrong("guessInput","Leider nicht. Weiter hören!");
+    return;
+  }
+  if(okT){
+    const bonus=S.artist==="bonus"&&okA?Math.round(base/2):0;
+    confetti();G.players[0].pts+=base+bonus;G.cur.solved=true;
+    reveal(`Richtig! +${base}${bonus?` und +${bonus} Interpret-Bonus`:""} in ${sec.toFixed(1).replace(".",",")} s`);
+    if(goNext)quickNext();
+  }else wrong("guessInput",okA?"Interpret stimmt, aber der Titel fehlt noch!":`„${v||va}“ ist es nicht. Weiter hören!`);
 });
 $("skipBtn").onclick=()=>reveal("Aufgelöst");
+function quickNext(){const r=G.round;setTimeout(()=>{if(G&&G.round===r&&G.cur.done&&!G.ended)$("nextBtn").click();},700);}
 
 function reveal(msg){
   G.cur.done=true; pause();
   ["judgePanel","revealBtn","modBox"].forEach(id=>$(id).classList.add("hide"));
-  $("guessInput").disabled=true; $("feedback").textContent="";
-  const t=G.cur.track; $("revealMsg").textContent=msg; $("rTitle").textContent=t.title; $("rArtist").textContent=t.artist; $("cover").src=t.cover;
+  $("guessInput").disabled=true; $("artistInput").disabled=true; $("feedback").textContent="";
+  const t=G.cur.track; $("revealMsg").textContent=msg; $("rTitle").textContent=t.title; $("rArtist").textContent=t.artist; $("cover").src=t.cover; $("rbg").style.backgroundImage=t.cover?`url("${t.cover}")`:"none";
   $("revealPanel").classList.remove("hide");
   $("nextBtn").textContent=G.round+1>=G.total?"Zum Ergebnis":"Nächster Song";
   G.cur.result={msg,title:t.title,artist:t.artist};
@@ -471,12 +658,31 @@ function renderScore(){$("scoreBar").innerHTML=G.players.map(p=>`<div style="bor
 function finish(){
   resetAudio(); show("end"); G.ended=true; broadcast();
   const ranked=[...G.players].sort((a,b)=>b.pts-a.pts);
-  $("winner").textContent=isParty()?(ranked[0].pts===ranked[1]?.pts?"Unentschieden!":`${ranked[0].name} gewinnt!`):`${ranked[0].pts} von ${G.round+(G.cur&&G.cur.done?1:0)} Songs erkannt.`;
-  $("finalList").innerHTML=ranked.map((p,i)=>`<li style="border-left:6px solid ${p.color}"><span>${i+1}. ${p.name}</span><span>${p.pts}</span></li>`).join("");
+  const played=G.round>=G.total?G.total:G.round+(G.cur&&G.cur.done?1:0);
+  $("endTitle").innerHTML=isParty()?'Und der Sieg<br><span>geht an…</span>':'Deine<br><span>Runde</span>';
+  $("winner").textContent=isParty()?(ranked[0].pts===ranked[1]?.pts?"Unentschieden!":`${ranked[0].name} gewinnt!`):`${ranked[0].pts} Punkte`;
+  $("finalList").innerHTML=ranked.map((p,i)=>`<li style="border-left:6px solid ${p.color}"><span>${i+1}. ${esc(p.name)}</span><span>${p.pts}</span></li>`).join("");
+  $("boardEnd").classList.add("hide"); $("finalList").classList.toggle("hide",!isParty());
+  if(!isParty()){
+    if(played>0){
+      const entry={id:Date.now(),pts:G.players[0].pts,played,cat:S.cat,artist:S.artist,date:new Date().toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"})};
+      const b=loadBoard();b.push(entry);b.sort((x,y)=>y.pts-x.pts);saveBoard(b.slice(0,50));
+      const rank=loadBoard().findIndex(x=>x.id===entry.id)+1;
+      $("winner").textContent=`${entry.pts} Punkte`+(rank===1&&loadBoard().length>1?" · Neuer Rekord!":rank?` · Platz ${rank}`:"");
+      if(rank===1)confetti();
+      renderBoard("boardList",entry.id); $("boardEnd").classList.remove("hide");
+    }
+  }
+}
+const ARTIST_LBL={none:"nur Titel",bonus:"Interpret Bonus",required:"Interpret Pflicht"};
+function loadBoard(){try{return JSON.parse(localStorage.getItem("eds_board")||"[]");}catch(e){return [];}}
+function saveBoard(b){try{localStorage.setItem("eds_board",JSON.stringify(b));}catch(e){}}
+function renderBoard(id,meId){
+  $(id).innerHTML=loadBoard().slice(0,10).map(e=>`<li class="${e.id===meId?"me":""}"><span><b>${e.pts} Punkte</b><small>${esc(e.cat)} · ${e.played} Songs · ${ARTIST_LBL[e.artist]||""}</small></span><small>${e.date}</small></li>`).join("")||'<li><span>Noch keine Runden</span></li>';
 }
 $("againBtn").onclick=()=>{
   if(S.mode==="online"&&NET.client){NET.players.forEach(p=>p.pts=0);G=null;NET.poolP=buildPool().catch(e=>e);show("lobby");renderLobby();broadcast();return;}
-  show("setup");
+  show("setup"); updBoardBox();
 };
 
 // ---------- Online: Moderator ist Gastgeber, Handys reden über einen Relay-Server (MQTT über WebSocket) ----------
@@ -606,7 +812,8 @@ function initBuzzer(code,bIdx){
   }
   function render(){
     $("bJoin").classList.add("hide"); $("bPlay").classList.remove("hide");
-    $("bTeam").textContent=st.name; $("bTeam").style.color=st.color; $("bPts").textContent=st.pts+(st.pts===1?" Punkt":" Punkte");
+    document.body.classList.add("team"); document.body.style.setProperty("--team",st.color);
+    $("bTeam").textContent=st.name; $("bTeam").style.color="#fff"; $("bPts").textContent=st.pts+(st.pts===1?" Punkt":" Punkte");
     const me=st.phase==="buzzed"&&st.buzzed.me;
     const b=$("bBtn"); b.style.background=st.color; b.disabled=!(st.phase==="playing"&&!st.locked); b.style.filter=me?"none":""; b.textContent=me?"DRAN!":"BUZZ";
     let m="";
@@ -616,7 +823,8 @@ function initBuzzer(code,bIdx){
     else if(st.phase==="reveal") m=st.last?`${st.last.msg}\n${st.last.title} von ${st.last.artist}`:"";
     else if(st.phase==="end") m="Spiel vorbei!";
     $("bMsg").innerText=m;
-    if(me&&prev!=="buzzed"&&navigator.vibrate)navigator.vibrate([80,60,80]);
+    if(me&&prev!=="buzzed"){if(navigator.vibrate)navigator.vibrate([80,60,80]);document.body.classList.remove("myturn");void document.body.offsetWidth;document.body.classList.add("myturn");}
+    if(st.phase==="reveal"&&prev!=="reveal"&&st.last&&st.last.msg.startsWith(st.name+" "))confetti(st.color);
     prev=st.phase;
     $("bScores").innerHTML=[...st.scores].sort((a,b)=>b.pts-a.pts).map(p=>`<div style="border-color:${p.color}">${esc(p.name)}: ${p.pts}</div>`).join("");
   }
