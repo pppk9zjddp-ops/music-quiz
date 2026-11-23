@@ -9,6 +9,11 @@ Musik-Quiz im Browser: Der Song läuft, wer ihn erkennt, buzzert.
 - **Party: ein Gerät** : Alle Teams buzzern am selben Gerät (Buttons oder Tasten 1–4).
 - **Solo** : Titel (und ggf. Interpret) eintippen, Tippfehler werden toleriert. Je schneller, desto mehr Punkte (100 bis 10). Eigene Bestenliste wird lokal im Browser gespeichert.
 
+## Party-Details
+- Nach dem Buzzern hat das Team 5 Sekunden (Countdown beim Moderator und auf allen Handys). Danach zählt es als falsch.
+- Teams können beim Beitreten ein Teamfoto mit der Handykamera aufnehmen (wird auf 200×200 verkleinert).
+- Am Laptop (ab 1000 px Breite) nutzt die Moderator-Ansicht die volle Breite.
+
 ## Einstellungen
 - **Musik:** Themen-Playlists von Deezer (Party, Volksfest, Best of 2026, Charts aktuell, Ballermann, Schlager, Deutschrap) oder Jahrzehnte/Künstler über iTunes.
 - **Spielende:** feste Songanzahl (5/10/20) oder im Multiplayer bis 5/10/15 Punkte.

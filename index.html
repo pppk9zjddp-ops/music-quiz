@@ -177,6 +177,47 @@ body.myturn{animation:flash .6s ease-out 3}
 .board li.me{box-shadow:0 0 0 2px var(--accent);background:#ffd23f1a}
 .mod{user-select:none;-webkit-user-select:none;touch-action:none}
 .mod.peek{border-style:solid;border-color:var(--accent);color:var(--text);background:#ffd23f14}
+.cd{position:relative;width:min(34vw,170px);aspect-ratio:1;margin:4px 0 10px}
+.cd svg{width:100%;height:100%;transform:rotate(-90deg)}
+.cd circle{fill:none;stroke-width:9}
+.cdbg{stroke:#0003}
+.cdfg{stroke:#fff;stroke-linecap:round;stroke-dasharray:276.5;stroke-dashoffset:0;transition:stroke-dashoffset .1s linear}
+.cd span{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:clamp(3rem,12vw,5rem);text-shadow:0 4px 0 #0003}
+.overlay.timeup .cd span{font-size:clamp(1.4rem,6vw,2.4rem)}
+.overlay.timeup{filter:saturate(.6)}
+.bcd{font-family:var(--display);font-weight:800;font-size:5rem;text-align:center;line-height:1;margin-top:-6px;text-shadow:0 4px 0 #0004}
+@media (min-width:1000px){
+  .wrap:has(#game:not(.hide)),.wrap:has(#lobby:not(.hide)){max-width:1440px}
+  #game:not(.hide){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 64px;align-items:start}
+  #game .top{grid-column:1/-1;font-size:1.05rem}
+  .gl{position:sticky;top:20px}
+  .gl .play{width:min(34vw,500px)}
+  .gl .eq{height:60px;gap:6px}.gl .eq i{width:10px}
+  .gl .timer{font-size:1.3rem}
+  .gr{padding-top:24px}
+  .buzzers{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  .buzz{padding:44px 10px;font-size:1.6rem}
+  .mod{font-size:1.05rem;padding:16px}
+  .reveal img{width:160px;height:160px}.reveal .t{font-size:2rem}.reveal .a{font-size:1.2rem}
+  .score{justify-content:flex-start}.score div{font-size:1.1rem;padding:8px 14px}
+  .speed b{font-size:3.4rem}
+  .oname{font-size:clamp(5rem,10vw,10rem)}
+  .cd{width:220px}
+  #lobby:not(.hide){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"t q" "s q";gap:10px 72px;align-items:center;min-height:80vh}
+  .lright{grid-area:t}.lleft{grid-area:q}.lteamsbox{grid-area:s;align-self:start}
+  .lleft .qr{width:min(400px,32vw)}
+  .lleft .code{font-size:4.5rem}
+  .lteams{justify-content:flex-start}.lteamsbox h2{text-align:left!important}
+  .lteams div{font-size:1.2rem;padding:10px 18px}
+}
+.av{width:1.7em;height:1.7em;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:.45em;border:2px solid #fffa;background:#0003}
+.av.big{display:block;width:72px;height:72px;margin:0 auto 10px;border-width:3px}
+.lteams div{display:inline-flex;align-items:center}
+.oimg{width:min(42vw,230px);aspect-ratio:1;border-radius:50%;object-fit:cover;border:6px solid #fff;box-shadow:0 12px 40px #0005;animation:pop .4s cubic-bezier(.2,1.6,.4,1)}
+.photo{display:flex;align-items:center;gap:14px;cursor:pointer;background:var(--panel);border:2px dashed var(--panel2);border-radius:16px;padding:12px;font-weight:700}
+.photo input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.pcirc{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:var(--panel2);color:var(--muted);overflow:hidden;flex:none}
+.pcirc svg{width:30px;height:30px}.pcirc img{width:100%;height:100%;object-fit:cover}
 canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 @media (prefers-reduced-motion:reduce){body::before,.play,.play.playing,.eqi i,body.is-playing .eq i,.bbtn::after,.overlay,.otag,body.myturn{animation:none!important}}
 </style>
@@ -229,7 +270,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
   <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
   <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <p class="note" id="verNote">Version 6</p>
+  <p class="note" id="verNote">Version 8</p>
 </section>
 
 <!-- LOADING -->
@@ -240,16 +281,22 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 
 <!-- LOBBY (Moderator) -->
 <section id="lobby" class="hide">
+  <div class="lright">
   <h1 class="logo"><span class="eqi"><i></i><i></i><i></i><i></i></span>Erkennst du<br><span>den Song?</span></h1>
   <p class="sub">Teams scannen den Code mit dem Handy und geben ihren Teamnamen ein.</p>
+  </div>
+  <div class="lleft">
   <div class="qr" id="qr"></div>
   <div class="code" id="lobbyCode">····</div>
   <div class="link" id="lobbyLink"></div>
   <div class="note" style="text-align:center" id="lobbyStatus"></div>
+  </div>
+  <div class="lteamsbox">
   <h2 style="text-align:center">Teams im Raum</h2>
   <div class="lteams" id="lobbyTeams"></div>
   <button class="btn" id="lobbyStart" disabled>Spiel starten</button>
   <div style="margin-top:8px"><button class="btn sec" id="lobbyBack">Zurück</button></div>
+  </div>
 </section>
 
 <!-- BUZZER (Team-Handy) -->
@@ -259,13 +306,20 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     <p class="sub">Raum <b id="bCode"></b></p>
     <h2>Teamname</h2>
     <input type="text" id="bName" maxlength="20" placeholder="z.B. Die Ohrwürmer">
+    <h2>Teamfoto <span style="text-transform:none;letter-spacing:0">(optional)</span></h2>
+    <label class="photo" for="bPhoto">
+      <input type="file" id="bPhoto" accept="image/*" capture="user">
+      <span class="pcirc" id="bPhotoPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+      <span id="bPhotoTxt">Foto aufnehmen</span>
+    </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 6</p>
+    <p class="note">Version 8</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
     <button class="bbtn" id="bBtn" disabled>BUZZ</button>
+    <div class="bcd hide" id="bcd"></div>
     <div class="bmsg" id="bMsg"></div>
     <div class="score" id="bScores"></div>
   </div>
@@ -274,20 +328,25 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <!-- GAME -->
 <section id="game" class="hide">
   <div class="top"><span><span id="roundInfo"></span> <span id="roomInfo"></span></span><button class="chip" id="quitBtn" style="padding:5px 12px">Beenden</button></div>
+  <div class="gl">
   <div class="challenge"><span class="badge" id="chalName"></span><div class="desc" id="chalDesc"></div></div>
   <div class="stage">
     <button class="play" id="playBtn" aria-label="Abspielen oder pausieren"><span class="vlabel"><svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></button>
     <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <div class="timer"><span id="playLabel">Abspielen</span> · <span id="timer">0:00</span></div>
   </div>
+  </div>
+  <div class="gr">
 
   <!-- Party -->
   <div id="partyArea">
     <div class="buzzers" id="buzzers"></div>
     <div class="overlay hide" id="judgePanel">
       <div class="otag">BUZZER!</div>
+      <img class="oimg hide" id="judgeImg" alt="">
       <div class="oname" id="judgeTitle"></div>
       <div class="osub">sagt die Antwort</div>
+      <div class="cd" id="cd"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" class="cdbg"/><circle cx="50" cy="50" r="44" class="cdfg" id="cdRing"/></svg><span id="cdNum">5</span></div>
       <div class="oans" id="judgeAns"></div>
       <div class="ohint" id="judgeHint"></div>
       <div class="obtns"><button class="btn" style="background:var(--ok)" id="rightBtn">Richtig</button><button class="btn hide" style="background:#ffd23f" id="rightBothBtn">Titel + Interpret</button><button class="btn" style="background:var(--bad);color:#fff" id="wrongBtn">Falsch</button></div>
@@ -316,6 +375,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   </div>
 
   <div class="score" id="scoreBar"></div>
+  </div>
 </section>
 
 <!-- END -->
@@ -331,7 +391,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="6";
+const VERSION="8";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -601,14 +661,15 @@ function renderBuzzers(){
     const b=document.createElement("button");b.className="buzz"+(G.cur.locked.has(i)?" locked":"");b.style.background=p.color;
     const off=S.mode==="online"&&!isOnline(p);
     if(off) b.classList.add("off");
-    b.innerHTML=`${p.name}<small>${S.mode==="online"?(off?"getrennt":"Handy verbunden"):"Taste "+(i+1)}</small>`;b.onclick=()=>buzz(i);$("buzzers").appendChild(b);
+    b.innerHTML=`${p.photo?`<img class="av big" src="${p.photo}" alt="">`:""}${esc(p.name)}<small>${S.mode==="online"?(off?"getrennt":"Handy verbunden"):"Taste "+(i+1)}</small>`;b.onclick=()=>buzz(i);$("buzzers").appendChild(b);
   });
 }
 function buzz(i){
   if(G.cur.done||G.cur.locked.has(i)||G.cur.buzzed!=null)return;
-  pause(); G.cur.buzzed=i; beep();
+  pause(); G.cur.buzzed=i; beep(); startCountdown(i);
   $("judgePanel").style.setProperty("--tc",G.players[i].color);
   $("judgeTitle").textContent=G.players[i].name;
+  const ph=G.players[i].photo; $("judgeImg").classList.toggle("hide",!ph); if(ph)$("judgeImg").src=ph;
   $("judgeAns").innerHTML=`Lösung: <b>${esc(G.cur.track.title)}</b> von <b>${esc(G.cur.track.artist)}</b>`;
   $("judgeHint").textContent=S.artist==="required"?"Titel UND Interpret müssen genannt werden":S.artist==="bonus"?"Interpret dazu gibt +1 Bonus":"";
   $("rightBtn").textContent=S.artist==="required"?"Beides richtig":S.artist==="bonus"?"Nur Titel (+1)":"Richtig";
@@ -624,10 +685,25 @@ function showAnswer(on){if(!G||!G.cur)return;const t=G.cur.track;$("modBox").cla
 $("modBox").addEventListener("pointerdown",e=>{e.preventDefault();showAnswer(true);});
 ["pointerup","pointerleave","pointercancel"].forEach(ev=>$("modBox").addEventListener(ev,()=>showAnswer(false)));
 $("modBox").addEventListener("contextmenu",e=>e.preventDefault());
-function partyRight(pts){const i=G.cur.buzzed;confetti(G.players[i].color);G.players[i].pts+=pts;G.cur.buzzed=null;reveal(`${G.players[i].name} hat es! +${pts} ${pts===1?"Punkt":"Punkte"}`);}
+const ANSWER_MS=5000; let cdTimer=null;
+function stopCountdown(){clearInterval(cdTimer);cdTimer=null;$("judgePanel").classList.remove("timeup");}
+function tick(f){try{const c=getCtx(),o=c.createOscillator(),g=c.createGain();o.frequency.value=f;g.gain.setValueAtTime(.12,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.12);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+.12);}catch(e){}}
+function startCountdown(i){
+  stopCountdown(); G.cur.deadline=Date.now()+ANSWER_MS; let lastSec=6, fired=false;
+  const upd=()=>{
+    if(!G||!G.cur||G.cur.buzzed!==i){stopCountdown();return;}
+    const left=G.cur.deadline-Date.now(), sec=Math.ceil(left/1000);
+    $("cdRing").style.strokeDashoffset=276.5*(1-Math.max(0,left)/ANSWER_MS);
+    if(left>0){$("cdNum").textContent=sec; if(sec<lastSec){lastSec=sec;tick(sec<=2?1200:900);}}
+    else if(!fired){fired=true;$("cdNum").textContent="Zeit um!";$("judgePanel").classList.add("timeup");tick(300);
+      setTimeout(()=>{if(G&&G.cur&&G.cur.buzzed===i)$("wrongBtn").click();},1500);}
+  };
+  upd(); cdTimer=setInterval(upd,100);
+}
+function partyRight(pts){stopCountdown();const i=G.cur.buzzed;confetti(G.players[i].color);G.players[i].pts+=pts;G.cur.buzzed=null;reveal(`${G.players[i].name} hat es! +${pts} ${pts===1?"Punkt":"Punkte"}`);}
 $("rightBtn").onclick=()=>partyRight(1);
 $("rightBothBtn").onclick=()=>partyRight(2);
-$("wrongBtn").onclick=()=>{const i=G.cur.buzzed;G.cur.locked.add(i);G.cur.buzzed=null;$("judgePanel").classList.add("hide");
+$("wrongBtn").onclick=()=>{stopCountdown();const i=G.cur.buzzed;if(i==null)return;G.cur.locked.add(i);G.cur.buzzed=null;$("judgePanel").classList.add("hide");
   if(G.cur.locked.size>=G.players.length){reveal("Keiner hatte es!");return;}
   $("revealBtn").classList.remove("hide");renderBuzzers();play();broadcast();};
 $("revealBtn").onclick=()=>reveal("Aufgelöst");
@@ -672,7 +748,7 @@ $("skipBtn").onclick=()=>reveal("Aufgelöst");
 function quickNext(){const r=G.round;setTimeout(()=>{if(G&&G.round===r&&G.cur.done&&!G.ended)$("nextBtn").click();},700);}
 
 function reveal(msg){
-  G.cur.done=true; pause();
+  stopCountdown(); G.cur.done=true; pause();
   ["judgePanel","revealBtn","modBox"].forEach(id=>$(id).classList.add("hide"));
   $("guessInput").disabled=true; $("artistInput").disabled=true; $("feedback").textContent="";
   const t=G.cur.track; $("revealMsg").textContent=msg; $("rTitle").textContent=t.title; $("rArtist").textContent=t.artist; $("cover").src=t.cover; $("rbg").style.backgroundImage=t.cover?`url("${t.cover}")`:"none";
@@ -687,14 +763,15 @@ function reveal(msg){
 $("nextBtn").onclick=()=>{G.round++; if(G.round>=G.total||goalReached())finish(); else startRound();};
 $("quitBtn").onclick=()=>finish();
 
-function renderScore(){$("scoreBar").innerHTML=G.players.map(p=>`<div style="border-color:${p.color}">${p.name}: ${p.pts}</div>`).join("");}
+function avatar(p){return p.photo?`<img class="av" src="${p.photo}" alt="">`:"";}
+function renderScore(){$("scoreBar").innerHTML=G.players.map(p=>`<div style="border-color:${p.color}">${avatar(p)}${esc(p.name)}: ${p.pts}</div>`).join("");}
 function finish(){
   resetAudio(); show("end"); G.ended=true; broadcast();
   const ranked=[...G.players].sort((a,b)=>b.pts-a.pts);
   const played=G.round>=G.total?G.total:G.round+(G.cur&&G.cur.done?1:0);
   $("endTitle").innerHTML=isParty()?'Und der Sieg<br><span>geht an…</span>':'Deine<br><span>Runde</span>';
   $("winner").textContent=isParty()?(ranked[0].pts===ranked[1]?.pts?"Unentschieden!":`${ranked[0].name} gewinnt!`):`${ranked[0].pts} Punkte`;
-  $("finalList").innerHTML=ranked.map((p,i)=>`<li style="border-left:6px solid ${p.color}"><span>${i+1}. ${esc(p.name)}</span><span>${p.pts}</span></li>`).join("");
+  $("finalList").innerHTML=ranked.map((p,i)=>`<li style="border-left:6px solid ${p.color}"><span>${i+1}. ${avatar(p)}${esc(p.name)}</span><span>${p.pts}</span></li>`).join("");
   $("boardEnd").classList.add("hide"); $("finalList").classList.toggle("hide",!isParty());
   if(!isParty()){
     if(played>0){
@@ -771,10 +848,11 @@ function onClientMsg(d){
   let i=NET.players.findIndex(p=>p.cid===cid);
   if(d.t==="join"){
     const name=String(d.name||"").trim().slice(0,20)||"Team";
+    const photo=typeof d.photo==="string"&&/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(d.photo)&&d.photo.length<80000?d.photo:null;
     if(i<0){
       if(NET.players.length>=8){sendTo(cid,{t:"full"});return;}
-      NET.players.push({name,color:COLORS8[NET.players.length],pts:0,cid}); i=NET.players.length-1;
-    }else NET.players[i].name=name;
+      NET.players.push({name,color:COLORS8[NET.players.length],pts:0,cid,photo}); i=NET.players.length-1;
+    }else{NET.players[i].name=name; if(photo)NET.players[i].photo=photo;}
     renderLobby(); if(G&&G.cur){renderBuzzers();renderScore();}
     sendTo(cid,stateFor(i)); return;
   }
@@ -789,7 +867,7 @@ function phase(){
 function stateFor(i){
   const p=NET.players[i], c=G&&G.cur, b=c&&c.buzzed!=null?NET.players[c.buzzed]:null;
   return {t:"state",phase:phase(),name:p.name,color:p.color,pts:p.pts,locked:!!(c&&c.locked.has(i)),
-    buzzed:b?{name:b.name,me:c.buzzed===i}:null,last:c&&c.done?c.result:null,
+    buzzed:b?{name:b.name,me:c.buzzed===i,left:Math.max(0,(c.deadline||0)-Date.now())}:null,last:c&&c.done?c.result:null,
     round:G?G.round+1:0,total:G?G.total:0,goal:G?G.goal:0,scores:NET.players.map(x=>({name:x.name,pts:x.pts,color:x.color}))};
 }
 function broadcast(){
@@ -797,7 +875,7 @@ function broadcast(){
   NET.players.forEach((p,i)=>sendTo(p.cid,stateFor(i)));
 }
 function renderLobby(){
-  $("lobbyTeams").innerHTML=NET.players.length?NET.players.map(p=>`<div class="${isOnline(p)?"":"off"}" style="background:${p.color}">${esc(p.name)}</div>`).join(""):'<span class="note">Noch keine Teams</span>';
+  $("lobbyTeams").innerHTML=NET.players.length?NET.players.map(p=>`<div class="${isOnline(p)?"":"off"}" style="background:${p.color}">${avatar(p)}${esc(p.name)}</div>`).join(""):'<span class="note">Noch keine Teams</span>';
   if($("lobbyStart").textContent!=="Songs werden geladen…"){$("lobbyStart").disabled=!NET.players.length;}
 }
 $("lobbyStart").onclick=async()=>{
@@ -818,27 +896,41 @@ function initBuzzer(code,bIdx){
   let cid=null; try{cid=localStorage.getItem("ow_cid");}catch(e){}
   if(!cid){cid=Math.random().toString(36).slice(2,12);try{localStorage.setItem("ow_cid",cid);}catch(e){}}
   try{$("bName").value=localStorage.getItem("ow_name")||"";}catch(e){}
-  let client=null,st=null,name="",prev=null,lastState=0,joinedAt=0,timer=null;
+  let photo=null; try{photo=localStorage.getItem("ow_photo");}catch(e){}
+  const setPrev=()=>{if(photo){$("bPhotoPrev").innerHTML=`<img src="${photo}" alt="">`;$("bPhotoTxt").textContent="Neues Foto aufnehmen";}};
+  setPrev();
+  $("bPhoto").addEventListener("change",e=>{
+    const f=e.target.files&&e.target.files[0]; if(!f)return;
+    const img=new Image(); img.onload=()=>{
+      const S2=200,c=document.createElement("canvas");c.width=c.height=S2;const x=c.getContext("2d");
+      const s=Math.min(img.width,img.height);x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,S2,S2);
+      photo=c.toDataURL("image/jpeg",.72); try{localStorage.setItem("ow_photo",photo);}catch(err){}
+      URL.revokeObjectURL(img.src); setPrev();
+      if(st)send({t:"join",name,photo});
+    };
+    img.src=URL.createObjectURL(f);
+  });
+  let client=null,st=null,name="",prev=null,lastState=0,joinedAt=0,timer=null,bcdT=null;
   const hostTopic=TOPIC+code+"/h", myTopic=TOPIC+code+"/c/"+cid;
   const joined=()=>!$("bPlay").classList.contains("hide");
   function msg(m){if(joined())$("bMsg").textContent=m;else $("bJoinMsg").textContent=m;}
   function send(o){if(client&&client.connected)client.publish(hostTopic,JSON.stringify({...o,cid}),{qos:1});}
   function start(){
     client=mqConnect(bIdx,false,()=>{
-      client.subscribe(myTopic,{qos:1},()=>send({t:"join",name}));
+      client.subscribe(myTopic,{qos:1},()=>send({t:"join",name,photo}));
       joinedAt=Date.now();
     },(t,d)=>{
       if(d.t==="full"){msg("Der Raum ist voll (max. 8 Teams).");return;}
-      if(d.t==="who"){send({t:"join",name});return;}
+      if(d.t==="who"){send({t:"join",name,photo});return;}
       if(d.t==="state"){st=d;lastState=Date.now();render();}
     },s=>{
-      if(s==="connect"&&st){send({t:"join",name});}
+      if(s==="connect"&&st){send({t:"join",name,photo});}
       if((s==="offline"||s==="reconnect")){$("bBtn").disabled=true;msg("Verbindung weg, verbinde neu…");}
     });
     clearInterval(timer);
     timer=setInterval(()=>{
       if(!client.connected)return;
-      if(!st){ send({t:"join",name}); if(Date.now()-joinedAt>9000) msg("Moderator nicht gefunden. Ist der Raum "+code+" noch offen? Versuche weiter…"); return; }
+      if(!st){ send({t:"join",name,photo}); if(Date.now()-joinedAt>9000) msg("Moderator nicht gefunden. Ist der Raum "+code+" noch offen? Versuche weiter…"); return; }
       send({t:"ping"});
       if(Date.now()-lastState>12000){$("bBtn").disabled=true;msg("Moderator gerade nicht erreichbar, warte…");}
     },3000);
@@ -846,7 +938,7 @@ function initBuzzer(code,bIdx){
   function render(){
     $("bJoin").classList.add("hide"); $("bPlay").classList.remove("hide");
     document.body.classList.add("team"); document.body.style.setProperty("--team",st.color);
-    $("bTeam").textContent=st.name; $("bTeam").style.color="#fff"; $("bPts").textContent=st.pts+(st.pts===1?" Punkt":" Punkte");
+    $("bTeam").innerHTML=(photo?`<img class="av" src="${photo}" alt="">`:"")+esc(st.name); $("bTeam").style.color="#fff"; $("bPts").textContent=st.pts+(st.pts===1?" Punkt":" Punkte");
     const me=st.phase==="buzzed"&&st.buzzed.me;
     const b=$("bBtn"); b.style.background=st.color; b.disabled=!(st.phase==="playing"&&!st.locked); b.style.filter=me?"none":""; b.textContent=me?"DRAN!":"BUZZ";
     let m="";
@@ -856,6 +948,12 @@ function initBuzzer(code,bIdx){
     else if(st.phase==="reveal") m=st.last?`${st.last.msg}\n${st.last.title} von ${st.last.artist}`:"";
     else if(st.phase==="end") m="Spiel vorbei!";
     $("bMsg").innerText=m;
+    clearInterval(bcdT); $("bcd").classList.add("hide");
+    if(st.phase==="buzzed"&&st.buzzed.left>0){
+      const end=Date.now()+st.buzzed.left; $("bcd").classList.remove("hide");
+      const u=()=>{const l=end-Date.now();$("bcd").textContent=l>0?Math.ceil(l/1000):"Zeit um!";$("bcd").style.fontSize=l>0?"":"2.4rem";if(l<=0)clearInterval(bcdT);};
+      u(); bcdT=setInterval(u,100);
+    }
     if(me&&prev!=="buzzed"){if(navigator.vibrate)navigator.vibrate([80,60,80]);document.body.classList.remove("myturn");void document.body.offsetWidth;document.body.classList.add("myturn");}
     if(st.phase==="reveal"&&prev!=="reveal"&&st.last&&st.last.msg.startsWith(st.name+" "))confetti(st.color);
     prev=st.phase;
