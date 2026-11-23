@@ -7,7 +7,7 @@ Musik-Quiz im Browser: Der Song läuft, wer ihn erkennt, buzzert.
 ## Modi
 - **Party: Handys als Buzzer** : Moderator öffnet die App (spielt Musik, sieht Lösung, wertet Richtig/Falsch). Teams scannen den QR-Code und haben auf dem Handy nur einen Buzzer.
 - **Party: ein Gerät** : Alle Teams buzzern am selben Gerät (Buttons oder Tasten 1–4).
-- **Solo** : Titel (und ggf. Interpret) eintippen, Tippfehler werden toleriert. Je schneller, desto mehr Punkte (100 bis 10). Eigene Bestenliste wird lokal im Browser gespeichert.
+- **Solo** : Titel (und ggf. Interpret) eintippen, Tippfehler werden toleriert. Je schneller, desto mehr Punkte: volle 100 Punkte in den ersten 3 s (nur Titel) bzw. 6 s (mit Interpret), danach 3 weniger pro Sekunde, mindestens 10. Eigene Bestenliste wird lokal im Browser gespeichert.
 
 ## Party-Details
 - Nach dem Buzzern hat das Team 5 Sekunden (Countdown beim Moderator und auf allen Handys). Danach zählt es als falsch.

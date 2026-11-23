@@ -292,7 +292,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
   <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
   <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <p class="note" id="verNote">Version 13</p>
+  <p class="note" id="verNote">Version 14</p>
 </section>
 
 <!-- LOADING -->
@@ -336,7 +336,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 13</p>
+    <p class="note">Version 14</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -379,7 +379,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 
   <!-- Solo -->
   <div id="soloArea" class="hide">
-    <div class="speed" id="speed"><span>Punkte jetzt</span><b id="speedPts">100</b></div>
+    <div class="speed" id="speed"><span id="speedLbl">Punkte jetzt</span><b id="speedPts">100</b></div>
     <form id="guessForm" class="guess" autocomplete="off">
       <input type="text" id="guessInput" placeholder="Songtitel" autocapitalize="off" autocorrect="off" spellcheck="false">
       <input type="text" id="artistInput" placeholder="Interpret" autocapitalize="off" autocorrect="off" spellcheck="false">
@@ -413,7 +413,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="13";
+const VERSION="14";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -695,9 +695,12 @@ function pause(){
   clearInterval(A.tick); A.playing=false; setPlayUI();
 }
 function resetAudio(){pause(); A.pos=0; A.elapsed=0; audioEl.removeAttribute("src"); audioEl.load(); renderTimer();}
-function speedPoints(){return Math.max(10,Math.round(100-A.elapsed*3));}
+// Schonfrist: nur Titel 3 s, mit Interpret 6 s volle 100 Punkte, danach -3 pro Sekunde
+function graceSec(){return S.artist==="none"?3:6;}
+function speedPoints(){return Math.max(10,Math.round(100-Math.max(0,A.elapsed-graceSec())*3));}
 function renderTimer(){
-  if(S.mode==="solo"&&G&&G.cur&&!G.cur.done){$("speedPts").textContent=speedPoints();}const s=Math.floor(A.elapsed);$("timer").textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;}
+  if(S.mode==="solo"&&G&&G.cur&&!G.cur.done){$("speedPts").textContent=speedPoints();
+    const g=graceSec()-A.elapsed; $("speedLbl").textContent=g>0?`Volle Punkte noch ${Math.ceil(g)} s`:"Punkte jetzt";}const s=Math.floor(A.elapsed);$("timer").textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;}
 // Schallplatte je nach Thema und Challenge gestalten (verrät nichts über den Song)
 const RECORDS={
   "Party":{g1:"#1d1030",g2:"#0c0716",lbl:"conic-gradient(from 0deg,#ff3d7f,#7b5cff,#00d4ff,#ff3d7f)",fg:"#fff",glow:"#ff3d7f66",txt:"Party"},
