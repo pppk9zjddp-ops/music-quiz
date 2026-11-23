@@ -18,6 +18,7 @@ Musik-Quiz im Browser: Der Song läuft, wer ihn erkennt, buzzert.
 - **Musik:** Themen-Playlists von Deezer (Party, Volksfest, Best of 2026, Charts aktuell, Ballermann, Schlager, Deutschrap), Jahrzehnte oder eigene Künstler (Suche mit Auswahlliste, Songs exakt per Deezer-Artist-ID, gleichmäßig verteilt).
 - **Spielende:** feste Songanzahl (5/10/20) oder im Multiplayer bis 5/10/15 Punkte.
 - **Interpret:** nicht nötig, Bonus (Party +1, Solo +50 %) oder Pflicht.
+- **Spotify:** Nach jeder Auflösung "In Spotify öffnen" (sucht den Song in Spotify) und "Merken". Gemerkte Songs stehen am Ende mit Spotify-Link.
 - **Schwierigkeit:** 1 = nur die bekanntesten Songs (nach Deezer-Beliebtheit), 2 = bekannt, 3 = auch Nischiges.
 - **Challenges:** Klassisch, Rückwärts, Unter Wasser, Turbo, Zeitlupe.
 

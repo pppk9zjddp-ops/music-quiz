@@ -137,6 +137,11 @@ body.is-playing .eq i{animation:eqb .9s ease-in-out infinite}
 .overlay .btn{box-shadow:0 8px 24px #0004}
 /* Auflösung */
 .revealp{position:relative;overflow:hidden}
+.spot{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.spotb{background:#1db954!important;color:#0b0b10!important;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.spotb svg{color:#0b0b10}
+.likeb.on{color:#ff4d8d;border-color:#ff4d8d}
+.liked li a{color:#1db954;font-weight:700;text-decoration:none;white-space:nowrap}
 .rbg{position:absolute;inset:-20px;background-size:cover;background-position:center;filter:blur(30px) saturate(1.4);opacity:.45;z-index:0}
 .revealp>*:not(.rbg){position:relative;z-index:1}
 .reveal img{width:110px;height:110px;box-shadow:0 10px 30px #0008;animation:pop .4s ease-out}
@@ -326,7 +331,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
   <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
   <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <p class="note" id="verNote">Version 17</p>
+  <p class="note" id="verNote">Version 18</p>
 </section>
 
 <!-- LOADING -->
@@ -370,7 +375,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 17</p>
+    <p class="note">Version 18</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -427,6 +432,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div class="panel revealp hide" id="revealPanel"><div class="rbg" id="rbg"></div>
     <div class="big" id="revealMsg"></div>
     <div class="reveal"><img id="cover" alt=""><div><div class="t" id="rTitle"></div><div class="a" id="rArtist"></div></div></div>
+    <div class="spot"><a class="btn spotb" id="spotBtn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M6.5 9.2c3.8-1.1 7.9-.8 11 .9M7.2 12.3c3.1-.9 6.4-.6 9 .8M7.9 15.2c2.5-.7 4.9-.5 7 .6" stroke="#1db954" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg>In Spotify öffnen</a><button class="btn sec likeb" id="likeBtn">♡ Merken</button></div>
     <div style="margin-top:14px"><button class="btn" id="nextBtn">Nächster Song</button></div>
   </div>
 
@@ -440,6 +446,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <p class="winner" id="winner"></p>
   <ul class="final" id="finalList"></ul>
   <div id="boardEnd" class="hide"><h2>Deine Bestenliste</h2><ol class="board" id="boardList"></ol></div>
+  <div id="likedEnd" class="hide"><h2>Deine gemerkten Songs</h2><ul class="board liked" id="likedList"></ul><button class="btn sec" id="likedClear" style="margin-top:8px">Liste leeren</button></div>
   <button class="btn" id="againBtn">Nochmal</button>
 </section>
 
@@ -448,7 +455,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="17";
+const VERSION="18";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -1002,6 +1009,7 @@ function reveal(msg){
   $("revealPanel").classList.remove("hide");
   $("nextBtn").textContent=G.round+1>=G.total||goalReached()?"Zum Ergebnis":"Nächster Song";
   G.cur.result={msg,title:t.title,artist:t.artist};
+  $("spotBtn").href=spotifyUrl(t); updLike();
   renderScore(); if(isParty()) renderBuzzers();
   broadcast();
   // Original zur Auflösung abspielen
@@ -1019,7 +1027,7 @@ function finish(){
   $("endTitle").innerHTML=isParty()?'Und der Sieg<br><span>geht an…</span>':'Deine<br><span>Runde</span>';
   $("winner").textContent=isParty()?(ranked[0].pts===ranked[1]?.pts?"Unentschieden!":`${ranked[0].name} gewinnt!`):`${ranked[0].pts} Punkte`;
   $("finalList").innerHTML=ranked.map((p,i)=>`<li style="border-left:6px solid ${p.color}"><span>${i+1}. ${avatar(p)}${esc(p.name)}</span><span>${p.pts}</span></li>`).join("");
-  $("boardEnd").classList.add("hide"); $("finalList").classList.toggle("hide",!isParty());
+  $("boardEnd").classList.add("hide"); $("finalList").classList.toggle("hide",!isParty()); renderLiked();
   if(!isParty()){
     if(played>0){
       const entry={id:Date.now(),who:PROFILE.name||"",pts:G.players[0].pts,played,cat:S.cat,artist:S.artist,date:new Date().toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"})};
@@ -1032,6 +1040,17 @@ function finish(){
     }
   }
 }
+function spotifyUrl(t){return "https://open.spotify.com/search/"+encodeURIComponent(t.title+" "+t.artist);}
+function loadLiked(){try{return JSON.parse(localStorage.getItem("eds_liked")||"[]");}catch(e){return [];}}
+function saveLiked(l){try{localStorage.setItem("eds_liked",JSON.stringify(l.slice(0,200)));}catch(e){}}
+const likeKey=t=>(t.title+"|"+t.artist).toLowerCase();
+function updLike(){const t=G&&G.cur&&G.cur.track;if(!t)return;const on=loadLiked().some(x=>likeKey(x)===likeKey(t));$("likeBtn").classList.toggle("on",on);$("likeBtn").textContent=on?"♥ Gemerkt":"♡ Merken";}
+$("likeBtn").onclick=()=>{const t=G.cur.track;let l=loadLiked();const k=likeKey(t);
+  if(l.some(x=>likeKey(x)===k))l=l.filter(x=>likeKey(x)!==k);else l.unshift({title:t.title,artist:t.artist,cover:t.cover||""});
+  saveLiked(l);updLike();};
+function renderLiked(){const l=loadLiked();$("likedEnd").classList.toggle("hide",!l.length);
+  $("likedList").innerHTML=l.slice(0,30).map(t=>`<li><span><b>${esc(t.title)}</b><small>${esc(t.artist)}</small></span><a href="${spotifyUrl(t)}" target="_blank" rel="noopener">Spotify ↗</a></li>`).join("");}
+$("likedClear").onclick=()=>{saveLiked([]);renderLiked();};
 const ARTIST_LBL={none:"nur Titel",bonus:"Interpret Bonus",required:"Interpret Pflicht"};
 function loadBoard(){try{return JSON.parse(localStorage.getItem("eds_board")||"[]");}catch(e){return [];}}
 function saveBoard(b){try{localStorage.setItem("eds_board",JSON.stringify(b));}catch(e){}}
