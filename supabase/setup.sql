@@ -30,3 +30,8 @@ create policy "eigenes Profil ändern" on public.profiles for update to authenti
 create policy "scores lesen" on public.solo_scores for select to authenticated using (true);
 create policy "eigene scores speichern" on public.solo_scores for insert to authenticated with check (user_id = auth.uid());
 create policy "eigene scores löschen" on public.solo_scores for delete to authenticated using (user_id = auth.uid());
+
+-- Zugriffsrechte für eingeloggte Nutzer (neue Supabase-Projekte vergeben die nicht mehr automatisch)
+grant usage on schema public to authenticated;
+grant select, insert, update on public.profiles to authenticated;
+grant select, insert, delete on public.solo_scores to authenticated;
