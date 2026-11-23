@@ -199,7 +199,7 @@ input[type=text]:focus{outline:none;border-color:var(--accent)}
 </section>
 
 </div>
-<script src="lib/peerjs.min.js"></script>
+<script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
 // ---------- Daten ----------
@@ -362,7 +362,7 @@ function show(id){["setup","loading","lobby","buzzer","game","end"].forEach(s=>$
 
 $("startBtn").onclick=async()=>{
   getCtx(); audioEl.play().catch(()=>{}); audioEl.pause(); // Audio auf iOS per Tap freischalten
-  if(S.mode==="online"){ if(!window.Peer){alert("Online-Modus konnte nicht geladen werden (lib/peerjs.min.js fehlt).");return;} show("lobby"); startHost(); return; }
+  if(S.mode==="online"){ if(!window.mqtt){alert("Online-Modus konnte nicht geladen werden (lib/mqtt.min.js fehlt).");return;} show("lobby"); startHost(); return; }
   const names=[...$("teamNames").querySelectorAll("input")].map((i,k)=>i.value.trim()||DEFAULT_TEAMS[k]);
   show("loading");
   try{
@@ -466,58 +466,73 @@ function finish(){
   $("finalList").innerHTML=ranked.map((p,i)=>`<li style="border-left:6px solid ${p.color}"><span>${i+1}. ${p.name}</span><span>${p.pts}</span></li>`).join("");
 }
 $("againBtn").onclick=()=>{
-  if(S.mode==="online"&&NET.peer&&!NET.peer.destroyed){NET.players.forEach(p=>p.pts=0);G=null;NET.poolP=buildPool().catch(e=>e);show("lobby");renderLobby();broadcast();return;}
+  if(S.mode==="online"&&NET.client){NET.players.forEach(p=>p.pts=0);G=null;NET.poolP=buildPool().catch(e=>e);show("lobby");renderLobby();broadcast();return;}
   show("setup");
 };
 
-// ---------- Online: Moderator ist Gastgeber, Handys verbinden sich direkt (WebRTC via PeerJS) ----------
+// ---------- Online: Moderator ist Gastgeber, Handys reden über einen Relay-Server (MQTT über WebSocket) ----------
+// Direkte Handy-Verbindungen (WebRTC) scheitern oft im Mobilfunk. Ein Relay klappt in jedem Netz.
 const COLORS8=[...TEAM_COLORS,"#ff9f43","#00b8c4","#f368e0","#8395a7"];
-const NET={peer:null,code:null,conns:new Map(),players:[],poolP:null};
-const PREFIX="ohrwurm-quiz-";
-const PEER_OPTS=window.OW_PEER_OPTS||{debug:0};
-function roomCode(){const a="ABCDEFGHJKLMNPQRSTUVWXYZ";return Array.from({length:4},()=>a[Math.random()*a.length|0]).join("");}
-function joinUrl(code){return location.origin+location.pathname+"?r="+code;}
-function isOnline(p){const c=NET.conns.get(p.cid);return !!(c&&c.open);}
+const BROKERS=window.OW_BROKERS||["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt"];
+const TOPIC="ohrwurm-fx7/v1/";
+const NET={client:null,code:null,broker:0,players:[],seen:new Map(),poolP:null,tick:null};
+function roomCode(){const a="ABCDEFGHJKLMNPQRSTUVWXYZ";return Array.from({length:5},()=>a[Math.random()*a.length|0]).join("");}
+function joinUrl(code,b){return location.origin+location.pathname+"?r="+code+(b?"&b="+b:"");}
+function isOnline(p){return Date.now()-(NET.seen.get(p.cid)||0)<12000;}
 function beep(){try{const c=getCtx(),o=c.createOscillator(),g=c.createGain();o.type="square";o.frequency.value=880;g.gain.setValueAtTime(.15,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.25);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+.25);}catch(e){}}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+// Verbindet mit Broker idx; probiert bei Bedarf den nächsten, wenn fallback=true
+function mqConnect(idx,fallback,onReady,onMsg,onStatus){
+  const c=mqtt.connect(BROKERS[idx],{clientId:"ow_"+Math.random().toString(36).slice(2,12),clean:true,reconnectPeriod:2000,connectTimeout:7000,keepalive:20});
+  let ready=false;
+  const to=fallback&&idx+1<BROKERS.length?setTimeout(()=>{if(!ready){c.end(true);mqConnect(idx+1,true,onReady,onMsg,onStatus);}},7000):null;
+  c.on("connect",()=>{onStatus&&onStatus("connect");if(!ready){ready=true;clearTimeout(to);onReady(c,idx);}});
+  c.on("offline",()=>onStatus&&onStatus("offline"));
+  c.on("reconnect",()=>onStatus&&onStatus("reconnect"));
+  c.on("error",()=>onStatus&&onStatus("error"));
+  c.on("message",(t,buf)=>{let d;try{d=JSON.parse(buf.toString());}catch(e){return;}onMsg(t,d);});
+  return c;
+}
 function startHost(){
-  if(NET.peer&&!NET.peer.destroyed){renderLobby();return;}
-  NET.code=roomCode(); NET.players=[]; NET.conns=new Map();
+  if(NET.client){renderLobby();return;}
+  NET.code=roomCode(); NET.players=[]; NET.seen=new Map();
   $("lobbyCode").textContent=NET.code; $("lobbyStatus").textContent="Raum wird geöffnet…"; $("qr").innerHTML=""; $("lobbyLink").textContent="";
-  const peer=new Peer(PREFIX+NET.code.toLowerCase(),PEER_OPTS); NET.peer=peer;
-  peer.on("open",()=>{
+  mqConnect(0,true,(c,idx)=>{
+    NET.client=c; NET.broker=idx;
+    c.subscribe(TOPIC+NET.code+"/h",{qos:1});
     $("lobbyStatus").textContent="Bereit. Teams können beitreten.";
-    const url=joinUrl(NET.code); $("lobbyLink").textContent=url;
+    const url=joinUrl(NET.code,idx); $("lobbyLink").textContent=url;
     if(window.qrcode){const q=qrcode(0,"M");q.addData(url);q.make();$("qr").innerHTML=q.createSvgTag({cellSize:6,margin:2,scalable:true});}
     if(location.protocol==="file:") $("lobbyStatus").textContent="Hinweis: Die Datei ist lokal geöffnet. Handys brauchen die Online-Adresse der App.";
+  },(t,d)=>onClientMsg(d),s=>{
+    if(!NET.client)return;
+    if(s==="offline"||s==="reconnect") $("lobbyStatus").textContent="Verbindung unterbrochen, verbinde neu…";
+    if(s==="connect") $("lobbyStatus").textContent="Bereit. Teams können beitreten.";
   });
-  peer.on("error",e=>{
-    if(e.type==="unavailable-id"){peer.destroy();NET.peer=null;startHost();return;}
-    if(e.type==="peer-unavailable")return;
-    $("lobbyStatus").textContent="Verbindungsproblem ("+e.type+"). Internet prüfen.";
-  });
-  peer.on("disconnected",()=>setTimeout(()=>{try{if(!peer.destroyed)peer.reconnect();}catch(e){}},2000));
-  peer.on("connection",conn=>{
-    conn.on("data",d=>onClientMsg(conn,d));
-    conn.on("close",()=>{if(conn.cid&&NET.conns.get(conn.cid)===conn)NET.conns.delete(conn.cid);renderLobby();if(G&&G.cur&&!$("game").classList.contains("hide"))renderBuzzers();});
-  });
+  clearInterval(NET.tick);
+  NET.tick=setInterval(()=>{ if(!$("lobby").classList.contains("hide"))renderLobby(); else if(G&&G.cur&&!$("game").classList.contains("hide"))renderBuzzers(); },4000);
   NET.poolP=buildPool().catch(e=>e); // Songs schon in der Lobby laden
   renderLobby();
 }
-function onClientMsg(conn,d){
+function sendTo(cid,obj){if(NET.client)NET.client.publish(TOPIC+NET.code+"/c/"+cid,JSON.stringify(obj),{qos:1});}
+function onClientMsg(d){
   if(!d||typeof d!=="object")return;
+  const cid=String(d.cid||"").replace(/[^a-z0-9]/gi,"").slice(0,20); if(!cid)return;
+  const wasOn=NET.players.some(p=>p.cid===cid&&isOnline(p));
+  NET.seen.set(cid,Date.now());
+  let i=NET.players.findIndex(p=>p.cid===cid);
   if(d.t==="join"){
     const name=String(d.name||"").trim().slice(0,20)||"Team";
-    const cid=String(d.cid||"").slice(0,20);
-    let i=NET.players.findIndex(p=>p.cid===cid);
     if(i<0){
-      if(NET.players.length>=8){conn.send({t:"full"});return;}
+      if(NET.players.length>=8){sendTo(cid,{t:"full"});return;}
       NET.players.push({name,color:COLORS8[NET.players.length],pts:0,cid}); i=NET.players.length-1;
     }else NET.players[i].name=name;
-    conn.cid=cid; NET.conns.set(cid,conn);
     renderLobby(); if(G&&G.cur){renderBuzzers();renderScore();}
-    broadcast(); return;
+    sendTo(cid,stateFor(i)); return;
   }
-  if(d.t==="buzz"&&G&&G.cur){const i=NET.players.findIndex(p=>p.cid===conn.cid); if(i>=0)buzz(i);}
+  if(i<0){sendTo(cid,{t:"who"});return;} // Host kennt das Team nicht (z.B. neu geladen)
+  if(d.t==="ping"){sendTo(cid,stateFor(i)); if(!wasOn){renderLobby();if(G&&G.cur)renderBuzzers();} return;}
+  if(d.t==="buzz"&&G&&G.cur&&d.r===G.round+1) buzz(i);
 }
 function phase(){
   if(!G) return "lobby"; if(G.ended) return "end"; if(!G.cur) return "lobby";
@@ -530,81 +545,85 @@ function stateFor(i){
     round:G?G.round+1:0,total:G?G.total:0,scores:NET.players.map(x=>({name:x.name,pts:x.pts,color:x.color}))};
 }
 function broadcast(){
-  if(S.mode!=="online")return;
-  NET.players.forEach((p,i)=>{const c=NET.conns.get(p.cid);if(c&&c.open)try{c.send(stateFor(i));}catch(e){}});
+  if(S.mode!=="online"||!NET.client)return;
+  NET.players.forEach((p,i)=>sendTo(p.cid,stateFor(i)));
 }
 function renderLobby(){
   $("lobbyTeams").innerHTML=NET.players.length?NET.players.map(p=>`<div class="${isOnline(p)?"":"off"}" style="background:${p.color}">${esc(p.name)}</div>`).join(""):'<span class="note">Noch keine Teams</span>';
-  $("lobbyStart").disabled=!NET.players.length; $("lobbyStart").textContent="Spiel starten";
+  if($("lobbyStart").textContent!=="Songs werden geladen…"){$("lobbyStart").disabled=!NET.players.length;}
 }
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 $("lobbyStart").onclick=async()=>{
   getCtx(); audioEl.play().catch(()=>{}); audioEl.pause();
   $("lobbyStart").disabled=true; $("lobbyStart").textContent="Songs werden geladen…";
   const pool=await NET.poolP;
+  $("lobbyStart").textContent="Spiel starten";
   if(!Array.isArray(pool)||pool.length<3){alert((pool&&pool.message)||"Zu wenige Songs gefunden.");NET.poolP=buildPool().catch(e=>e);renderLobby();return;}
   shuffle(pool);
   G={pool,players:NET.players,round:0,total:Math.min(S.rounds,pool.length),chals:[...S.chals]};
   startRound();
 };
-$("lobbyBack").onclick=()=>{if(NET.peer){NET.peer.destroy();NET.peer=null;}NET.players=[];NET.conns=new Map();show("setup");};
+$("lobbyBack").onclick=()=>{if(NET.client){NET.client.end(true);NET.client=null;}clearInterval(NET.tick);NET.players=[];show("setup");};
 
 // ---------- Online: Buzzer auf dem Team-Handy ----------
-function initBuzzer(code){
+function initBuzzer(code,bIdx){
   show("buzzer"); $("bCode").textContent=code;
   let cid=null; try{cid=localStorage.getItem("ow_cid");}catch(e){}
-  if(!cid){cid=Math.random().toString(36).slice(2,10);try{localStorage.setItem("ow_cid",cid);}catch(e){}}
+  if(!cid){cid=Math.random().toString(36).slice(2,12);try{localStorage.setItem("ow_cid",cid);}catch(e){}}
   try{$("bName").value=localStorage.getItem("ow_name")||"";}catch(e){}
-  let peer=null,conn=null,st=null,name="",prev=null,retry=null;
+  let client=null,st=null,name="",prev=null,lastState=0,joinedAt=0,timer=null;
+  const hostTopic=TOPIC+code+"/h", myTopic=TOPIC+code+"/c/"+cid;
   const joined=()=>!$("bPlay").classList.contains("hide");
   function msg(m){if(joined())$("bMsg").textContent=m;else $("bJoinMsg").textContent=m;}
-  function connect(){
-    clearTimeout(retry);
-    if(!peer||peer.destroyed){
-      peer=new Peer(PEER_OPTS);
-      peer.on("open",open);
-      peer.on("error",e=>{
-        if(e.type==="peer-unavailable"){ if(joined()){msg("Moderator nicht erreichbar, versuche erneut…");retry=setTimeout(open,3000);} else {msg("Raum "+code+" nicht gefunden. Code prüfen.");$("bJoinBtn").disabled=false;} }
-        else {msg("Verbindungsproblem ("+e.type+"). Versuche erneut…");retry=setTimeout(()=>{peer.destroy();connect();},3000);}
-      });
-      peer.on("disconnected",()=>setTimeout(()=>{try{if(!peer.destroyed)peer.reconnect();}catch(e){}},2000));
-    }else open();
-  }
-  function open(){
-    if(conn&&conn.open)return;
-    conn=peer.connect(PREFIX+code.toLowerCase(),{reliable:true});
-    conn.on("open",()=>conn.send({t:"join",name,cid}));
-    conn.on("data",d=>{if(d&&d.t==="full"){msg("Der Raum ist voll (max. 8 Teams).");return;} if(d&&d.t==="state"){st=d;render();}});
-    conn.on("close",()=>{$("bBtn").disabled=true;msg("Verbindung weg, verbinde neu…");retry=setTimeout(open,1500);});
+  function send(o){if(client&&client.connected)client.publish(hostTopic,JSON.stringify({...o,cid}),{qos:1});}
+  function start(){
+    client=mqConnect(bIdx,false,()=>{
+      client.subscribe(myTopic,{qos:1},()=>send({t:"join",name}));
+      joinedAt=Date.now();
+    },(t,d)=>{
+      if(d.t==="full"){msg("Der Raum ist voll (max. 8 Teams).");return;}
+      if(d.t==="who"){send({t:"join",name});return;}
+      if(d.t==="state"){st=d;lastState=Date.now();render();}
+    },s=>{
+      if(s==="connect"&&st){send({t:"join",name});}
+      if((s==="offline"||s==="reconnect")){$("bBtn").disabled=true;msg("Verbindung weg, verbinde neu…");}
+    });
+    clearInterval(timer);
+    timer=setInterval(()=>{
+      if(!client.connected)return;
+      if(!st){ send({t:"join",name}); if(Date.now()-joinedAt>9000) msg("Moderator nicht gefunden. Ist der Raum "+code+" noch offen? Versuche weiter…"); return; }
+      send({t:"ping"});
+      if(Date.now()-lastState>12000){$("bBtn").disabled=true;msg("Moderator gerade nicht erreichbar, warte…");}
+    },3000);
   }
   function render(){
     $("bJoin").classList.add("hide"); $("bPlay").classList.remove("hide");
     $("bTeam").textContent=st.name; $("bTeam").style.color=st.color; $("bPts").textContent=st.pts+(st.pts===1?" Punkt":" Punkte");
-    const b=$("bBtn"); b.style.background=st.color; b.disabled=!(st.phase==="playing"&&!st.locked); b.style.filter=(st.phase==="buzzed"&&st.buzzed.me)?"none":""; b.textContent=(st.phase==="buzzed"&&st.buzzed.me)?"DRAN!":"BUZZ";
+    const me=st.phase==="buzzed"&&st.buzzed.me;
+    const b=$("bBtn"); b.style.background=st.color; b.disabled=!(st.phase==="playing"&&!st.locked); b.style.filter=me?"none":""; b.textContent=me?"DRAN!":"BUZZ";
     let m="";
     if(st.phase==="lobby") m="Ihr seid drin! Wartet auf den Start.";
     else if(st.phase==="playing") m=st.locked?"Falsch. Ihr seid für diesen Song raus.":`Song ${st.round} von ${st.total}. Hört genau hin!`;
-    else if(st.phase==="buzzed") m=st.buzzed.me?"Ihr seid dran! Sagt die Antwort.":`${st.buzzed.name} antwortet…`;
+    else if(st.phase==="buzzed") m=me?"Ihr seid dran! Sagt die Antwort.":`${st.buzzed.name} antwortet…`;
     else if(st.phase==="reveal") m=st.last?`${st.last.msg}\n${st.last.title} von ${st.last.artist}`:"";
     else if(st.phase==="end") m="Spiel vorbei!";
     $("bMsg").innerText=m;
-    if(st.phase==="buzzed"&&st.buzzed.me&&prev!=="buzzed"&&navigator.vibrate)navigator.vibrate([80,60,80]);
+    if(me&&prev!=="buzzed"&&navigator.vibrate)navigator.vibrate([80,60,80]);
     prev=st.phase;
     $("bScores").innerHTML=[...st.scores].sort((a,b)=>b.pts-a.pts).map(p=>`<div style="border-color:${p.color}">${esc(p.name)}: ${p.pts}</div>`).join("");
   }
   $("bBtn").addEventListener("pointerdown",e=>{
-    e.preventDefault(); const b=$("bBtn"); if(b.disabled||!conn||!conn.open)return;
-    conn.send({t:"buzz"}); b.disabled=true; $("bMsg").textContent="Gebuzzert!"; if(navigator.vibrate)navigator.vibrate(60);
+    e.preventDefault(); const b=$("bBtn"); if(b.disabled||!st||!client||!client.connected)return;
+    send({t:"buzz",r:st.round}); b.disabled=true; $("bMsg").textContent="Gebuzzert!"; if(navigator.vibrate)navigator.vibrate(60);
   });
   $("bJoinBtn").onclick=()=>{
-    if(!window.Peer){msg("Konnte nicht laden. Seite neu öffnen.");return;}
+    if(!window.mqtt){msg("Konnte nicht laden. Seite neu öffnen.");return;}
     name=$("bName").value.trim()||"Team"; try{localStorage.setItem("ow_name",name);}catch(e){}
-    $("bJoinBtn").disabled=true; msg("Verbinde…"); connect();
+    $("bJoinBtn").disabled=true; msg("Verbinde…"); start();
   };
   $("bName").addEventListener("keydown",e=>{if(e.key==="Enter")$("bJoinBtn").click();});
 }
-const ROOM=new URLSearchParams(location.search).get("r");
-if(ROOM) initBuzzer(ROOM.toUpperCase().replace(/[^A-Z]/g,"").slice(0,4));
+const QS=new URLSearchParams(location.search), ROOM=QS.get("r");
+if(ROOM) initBuzzer(ROOM.toUpperCase().replace(/[^A-Z]/g,"").slice(0,5), Math.min(Math.max(parseInt(QS.get("b")||"0",10)||0,0),BROKERS.length-1));
 </script>
 </body>
 </html>
