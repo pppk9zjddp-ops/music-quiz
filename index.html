@@ -232,6 +232,11 @@ body.myturn{animation:flash .6s ease-out 3}
 .alist img,.alist .ph{width:40px;height:40px;border-radius:50%;background:var(--panel2);flex:none}
 .alist b{display:block}.alist small{color:var(--muted)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:70;background:#2a1f10;border:1px solid var(--accent);color:var(--text);padding:12px 16px;border-radius:14px;max-width:min(560px,calc(100vw - 32px));font-weight:600;box-shadow:0 10px 30px #000a}
+.profpill{float:right;display:inline-flex;align-items:center;gap:8px;background:#ffffff12;border:1px solid #ffffff1f;color:var(--text);border-radius:999px;padding:4px 12px 4px 4px;font-weight:700;cursor:pointer;margin-top:6px}
+.pav{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1b1500;font-weight:800;overflow:hidden}
+.pav img{width:100%;height:100%;object-fit:cover}
+#profPanel{clear:both}
+.profpill.synced .pav{box-shadow:0 0 0 2px var(--ok)}
 canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 @media (prefers-reduced-motion:reduce){body::before,.play,.play.playing,.eqi i,body.is-playing .eq i,.bbtn::after,.overlay,.otag,body.myturn{animation:none!important}}
 </style>
@@ -242,6 +247,27 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <div class="toast hide" id="toast" role="status"></div>
 <!-- SETUP -->
 <section id="setup">
+  <button type="button" class="profpill" id="profPill"><span class="pav" id="profAv"></span><span id="profName">Profil anlegen</span></button>
+  <div class="panel hide" id="profPanel">
+    <h2 style="margin-top:0">Dein Profil</h2>
+    <input type="text" id="profNameIn" maxlength="20" placeholder="Dein Name">
+    <label class="photo" for="profPhoto" style="margin-top:10px">
+      <input type="file" id="profPhoto" accept="image/*" capture="user">
+      <span class="pcirc" id="profPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+      <span>Profilfoto aufnehmen</span>
+    </label>
+    <div class="row" style="margin-top:12px"><button class="btn" id="profSave">Speichern</button><button class="btn sec" id="profClose">Abbrechen</button></div>
+    <div id="authBox" class="hide">
+      <h2>Login</h2>
+      <div id="authOut">
+        <p class="note" style="margin-top:0">Mit Login hast du dein Profil und deine Bestenliste auf jedem Gerät. Kein Passwort: Du bekommst einen Link per E-Mail.</p>
+        <form id="authForm" class="row" autocomplete="on"><input type="email" id="authEmail" placeholder="deine@email.de" required style="flex:2"><button class="btn" type="submit" style="flex:1">Link senden</button></form>
+      </div>
+      <div id="authIn" class="hide"><p class="note" style="margin-top:0">Angemeldet als <b id="authWho"></b></p><button class="btn sec" id="authOutBtn" type="button">Abmelden</button></div>
+      <p class="note" id="authMsg"></p>
+    </div>
+    <p class="note" id="profNote">Ohne Login wird dein Profil nur auf diesem Gerät gespeichert. Es wird beim Beitreten als Team und in der Solo-Bestenliste genutzt.</p>
+  </div>
   <h1 class="logo"><span class="eqi"><i></i><i></i><i></i><i></i></span>Erkennst du<br><span>den Song?</span></h1>
   <p class="sub">Der Song läuft. Wer ihn erkennt, buzzert.</p>
 
@@ -292,7 +318,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
   <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
   <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <p class="note" id="verNote">Version 14</p>
+  <p class="note" id="verNote">Version 16</p>
 </section>
 
 <!-- LOADING -->
@@ -336,7 +362,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 14</p>
+    <p class="note">Version 16</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -410,10 +436,11 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 </section>
 
 </div>
+<script src="config.js"></script>
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="14";
+const VERSION="16";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -546,6 +573,74 @@ async function deezerPlaylist(id){
   const d=await jsonp(url,10000);
   return (d.data||[]).filter(t=>t.preview&&t.readable!==false).map(t=>({title:clean(t.title_short||t.title),artist:t.artist.name,preview:t.preview,cover:t.album&&t.album.cover_medium}));
 }
+// ---------- Profil (lokal; später optional per Login synchronisiert) ----------
+let PROFILE={}; try{PROFILE=JSON.parse(localStorage.getItem("eds_profile")||"{}");}catch(e){}
+function saveProfile(){try{localStorage.setItem("eds_profile",JSON.stringify(PROFILE));}catch(e){}}
+function squarePhoto(file,cb){const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=c.height=200;const s=Math.min(img.width,img.height);
+  c.getContext("2d").drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,200,200);URL.revokeObjectURL(img.src);cb(c.toDataURL("image/jpeg",.72));};img.src=URL.createObjectURL(file);}
+let profDraft=null;
+function renderProfile(){
+  $("profName").textContent=PROFILE.name||"Profil anlegen";
+  $("profAv").innerHTML=PROFILE.photo?`<img src="${PROFILE.photo}" alt="">`:(PROFILE.name?esc(PROFILE.name[0].toUpperCase()):"+");
+}
+$("profPill").onclick=()=>{profDraft={...PROFILE};$("profNameIn").value=PROFILE.name||"";$("profPrev").innerHTML=PROFILE.photo?`<img src="${PROFILE.photo}" alt="">`:$("profPrev").innerHTML;$("profPanel").classList.toggle("hide");};
+$("profPhoto").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];if(!f)return;squarePhoto(f,d=>{profDraft.photo=d;$("profPrev").innerHTML=`<img src="${d}" alt="">`;});});
+$("profSave").onclick=()=>{PROFILE={...profDraft,name:$("profNameIn").value.trim().slice(0,20)};saveProfile();renderProfile();$("profPanel").classList.add("hide");pushProfile();};
+$("profClose").onclick=()=>$("profPanel").classList.add("hide");
+renderProfile();
+
+// ---------- Login und Sync über Supabase (nur wenn config.js ausgefüllt ist) ----------
+const SB={client:null,user:null};
+function sbReady(){return !!(SB.client&&SB.user);}
+async function pushProfile(){ if(!sbReady())return;
+  await SB.client.from("profiles").upsert({id:SB.user.id,name:PROFILE.name||null,photo:PROFILE.photo||null,updated_at:new Date().toISOString()}); }
+async function syncAll(){
+  if(!sbReady())return;
+  // Profil: Server gewinnt, sonst lokales Profil hochladen
+  const {data:prof}=await SB.client.from("profiles").select("name,photo").eq("id",SB.user.id).maybeSingle();
+  if(prof&&(prof.name||prof.photo)){PROFILE={name:prof.name||"",photo:prof.photo||null};saveProfile();renderProfile();}
+  else if(PROFILE.name||PROFILE.photo) await pushProfile();
+  // Lokale, noch nicht hochgeladene Solo-Runden hochladen
+  const local=loadBoard(), todo=local.filter(e=>!e.synced);
+  if(todo.length){
+    const {error}=await SB.client.from("solo_scores").insert(todo.map(e=>({pts:e.pts,played:e.played,cat:e.cat,artist_mode:e.artist,created_at:new Date(e.id).toISOString()})));
+    if(!error){todo.forEach(e=>e.synced=true);saveBoard(local);}
+  }
+  // Bestenliste vom Server holen (geräteübergreifend)
+  const {data:rows}=await SB.client.from("solo_scores").select("pts,played,cat,artist_mode,created_at").eq("user_id",SB.user.id).order("pts",{ascending:false}).limit(50);
+  if(rows){saveBoard(rows.map(r=>{const d=new Date(r.created_at);return {id:d.getTime(),who:PROFILE.name||"",pts:r.pts,played:r.played,cat:r.cat,artist:r.artist_mode,synced:true,
+    date:d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"})};}));updBoardBox&&updBoardBox();}
+}
+async function pushScore(entry){ if(!sbReady())return;
+  const {error}=await SB.client.from("solo_scores").insert({pts:entry.pts,played:entry.played,cat:entry.cat,artist_mode:entry.artist,created_at:new Date(entry.id).toISOString()});
+  if(!error){const b=loadBoard();const e=b.find(x=>x.id===entry.id);if(e){e.synced=true;saveBoard(b);}}
+}
+function renderAuth(){
+  $("authBox").classList.toggle("hide",!SB.client);
+  $("authOut").classList.toggle("hide",!!SB.user); $("authIn").classList.toggle("hide",!SB.user);
+  if(SB.user)$("authWho").textContent=SB.user.email||"";
+  $("profPill").classList.toggle("synced",!!SB.user);
+  $("profNote").textContent=SB.user?"Dein Profil und deine Solo-Bestenliste werden mit deinem Account synchronisiert.":"Ohne Login wird dein Profil nur auf diesem Gerät gespeichert. Es wird beim Beitreten als Team und in der Solo-Bestenliste genutzt.";
+}
+(function initSupabase(){
+  const cfg=window.EDS_SUPABASE||{}; if(!cfg.url||!cfg.key||location.protocol==="file:")return;
+  const s=document.createElement("script"); s.src="lib/supabase.js";
+  s.onload=async()=>{
+    SB.client=supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,detectSessionInUrl:true,flowType:"implicit"}});
+    SB.client.auth.onAuthStateChange((ev,session)=>{const was=SB.user&&SB.user.id;SB.user=session?session.user:null;renderAuth();
+      if(SB.user&&SB.user.id!==was){syncAll().catch(()=>{});if(ev==="SIGNED_IN"){$("authMsg").textContent="Angemeldet!";}}});
+    const {data}=await SB.client.auth.getSession(); SB.user=data.session?data.session.user:null; renderAuth(); if(SB.user)syncAll().catch(()=>{});
+  };
+  document.head.appendChild(s);
+})();
+$("authForm").addEventListener("submit",async e=>{
+  e.preventDefault(); if(!SB.client)return; const email=$("authEmail").value.trim(); if(!email)return;
+  $("authMsg").textContent="Sende Link…";
+  const {error}=await SB.client.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
+  $("authMsg").textContent=error?("Das hat nicht geklappt: "+error.message):"Link ist unterwegs! Öffne die E-Mail auf diesem Gerät und tippe auf den Link.";
+});
+$("authOutBtn").onclick=async()=>{if(SB.client)await SB.client.auth.signOut();SB.user=null;renderAuth();$("authMsg").textContent="Abgemeldet. Dein Profil bleibt auf diesem Gerät.";};
+
 // ---------- Künstler: exakt per Deezer-Artist-ID ----------
 let MY_ARTISTS=[]; try{MY_ARTISTS=JSON.parse(localStorage.getItem("eds_artists")||"[]");}catch(e){}
 function saveArtists(){try{localStorage.setItem("eds_artists",JSON.stringify(MY_ARTISTS));}catch(e){}}
@@ -752,7 +847,7 @@ $("startBtn").onclick=async()=>{
     const pool=await buildPool();
     if(pool.length<3) throw new Error("Zu wenige Songs gefunden. Andere Kategorie oder mehr Künstler probieren.");
     if(pool.missing&&pool.missing.length)showToast("Keine Songs gefunden für: "+pool.missing.join(", "));
-    const players= S.mode==="party"? names.map((n,i)=>({name:n,color:TEAM_COLORS[i],pts:0})) : [{name:"Du",color:"var(--accent)",pts:0}];
+    const players= S.mode==="party"? names.map((n,i)=>({name:n,color:TEAM_COLORS[i],pts:0})) : [{name:PROFILE.name||"Du",photo:PROFILE.photo||null,color:"var(--accent)",pts:0}];
     G=newGame(pool,players);
     startRound();
   }catch(e){alert(e.message||"Fehler beim Laden der Songs.");show("setup");}
@@ -909,12 +1004,13 @@ function finish(){
   $("boardEnd").classList.add("hide"); $("finalList").classList.toggle("hide",!isParty());
   if(!isParty()){
     if(played>0){
-      const entry={id:Date.now(),pts:G.players[0].pts,played,cat:S.cat,artist:S.artist,date:new Date().toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"})};
+      const entry={id:Date.now(),who:PROFILE.name||"",pts:G.players[0].pts,played,cat:S.cat,artist:S.artist,date:new Date().toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"})};
       const b=loadBoard();b.push(entry);b.sort((x,y)=>y.pts-x.pts);saveBoard(b.slice(0,50));
       const rank=loadBoard().findIndex(x=>x.id===entry.id)+1;
       $("winner").textContent=`${entry.pts} Punkte`+(rank===1&&loadBoard().length>1?" · Neuer Rekord!":rank?` · Platz ${rank}`:"");
       if(rank===1)confetti();
       renderBoard("boardList",entry.id); $("boardEnd").classList.remove("hide");
+      pushScore(entry).catch(()=>{});
     }
   }
 }
@@ -922,7 +1018,7 @@ const ARTIST_LBL={none:"nur Titel",bonus:"Interpret Bonus",required:"Interpret P
 function loadBoard(){try{return JSON.parse(localStorage.getItem("eds_board")||"[]");}catch(e){return [];}}
 function saveBoard(b){try{localStorage.setItem("eds_board",JSON.stringify(b));}catch(e){}}
 function renderBoard(id,meId){
-  $(id).innerHTML=loadBoard().slice(0,10).map(e=>`<li class="${e.id===meId?"me":""}"><span><b>${e.pts} Punkte</b><small>${esc(e.cat)} · ${e.played} Songs · ${ARTIST_LBL[e.artist]||""}</small></span><small>${e.date}</small></li>`).join("")||'<li><span>Noch keine Runden</span></li>';
+  $(id).innerHTML=loadBoard().slice(0,10).map(e=>`<li class="${e.id===meId?"me":""}"><span><b>${e.pts} Punkte${e.who?` · ${esc(e.who)}`:""}</b><small>${esc(e.cat)} · ${e.played} Songs · ${ARTIST_LBL[e.artist]||""}</small></span><small>${e.date}</small></li>`).join("")||'<li><span>Noch keine Runden</span></li>';
 }
 $("againBtn").onclick=()=>{
   if(S.mode==="online"&&NET.client){NET.players.forEach(p=>p.pts=0);G=null;NET.poolP=buildPool().catch(e=>e);show("lobby");renderLobby();broadcast();return;}
@@ -1031,6 +1127,7 @@ function initBuzzer(code,bIdx){
   if(!cid){cid=Math.random().toString(36).slice(2,12);try{localStorage.setItem("ow_cid",cid);}catch(e){}}
   try{$("bName").value=localStorage.getItem("ow_name")||"";}catch(e){}
   let photo=null; try{photo=localStorage.getItem("ow_photo");}catch(e){}
+  if(!photo&&PROFILE.photo)photo=PROFILE.photo;
   const setPrev=()=>{if(photo){$("bPhotoPrev").innerHTML=`<img src="${photo}" alt="">`;$("bPhotoTxt").textContent="Neues Foto aufnehmen";}};
   setPrev();
   $("bPhoto").addEventListener("change",e=>{

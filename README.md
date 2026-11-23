@@ -29,3 +29,9 @@ Musik-Quiz im Browser: Der Song läuft, wer ihn erkennt, buzzert.
 - Musik: 30-Sekunden-Vorschauen der iTunes Search API (Deezer als Ersatz), per JSONP geladen.
 - Handy-Verbindung: MQTT über WebSocket via öffentlichem Broker (EMQX, HiveMQ als Ersatz). Läuft auch im Mobilfunk, kein eigenes Backend.
 - `lib/` enthält MQTT.js 5.15.2 und qrcode-generator 1.4.4 (beide MIT).
+
+## Login (optional, Supabase)
+1. Supabase-Projekt anlegen, `supabase/setup.sql` im SQL Editor ausführen.
+2. Authentication → URL Configuration: Site URL = `https://pppk9zjddp-ops.github.io/music-quiz/`.
+3. In `config.js` Project URL und anon/publishable key eintragen (niemals den service_role key).
+Ohne Eintrag läuft die App ohne Login, das Profil liegt dann nur lokal im Browser.
