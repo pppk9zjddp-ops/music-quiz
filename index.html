@@ -385,7 +385,7 @@ details.scard .board{margin-top:12px}
   </div>
   </div>
   </div>
-  <p class="note" id="verNote">Version 23</p>
+  <p class="note" id="verNote">Version 24</p>
 </section>
 
 <!-- LOADING -->
@@ -429,7 +429,7 @@ details.scard .board{margin-top:12px}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 23</p>
+    <p class="note">Version 24</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -519,7 +519,7 @@ details.scard .board{margin-top:12px}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="23";
+const VERSION="24";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -1113,7 +1113,15 @@ function reveal(msg){
   renderScore(); if(isParty()) renderBuzzers();
   broadcast();
   // Original zur Auflösung abspielen
-  A.pos=0; audioEl.src=t.preview; audioEl.currentTime=0; play(true);
+  // an der aktuellen Stelle im Original weiterhören (nicht von vorne)
+  const r=G.cur; let at=0;
+  if(r.buffer&&(r.chal==="reverse"||r.chal==="water")&&A.pos>0){const d=r.buffer.duration,p=A.pos%d;at=r.chal==="reverse"?d-p:p;}
+  else if(audioEl.src===t.preview)at=audioEl.currentTime||0;
+  if(at>28)at=0;
+  A.pos=0; if(audioEl.src!==t.preview)audioEl.src=t.preview;
+  const seek=()=>{try{audioEl.currentTime=at;}catch(e){}};
+  if(audioEl.readyState>=1)seek();else audioEl.addEventListener("loadedmetadata",seek,{once:true});
+  play(true);
 }
 $("nextBtn").onclick=()=>{G.round++; if(G.round>=G.total||goalReached())finish(); else startRound();};
 $("quitBtn").onclick=()=>finish();
