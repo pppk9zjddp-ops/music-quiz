@@ -277,6 +277,8 @@ details.scard .board{margin-top:12px}
 .cropview{width:260px;max-width:100%;aspect-ratio:1;margin:0 auto;border-radius:50%;overflow:hidden;box-shadow:0 0 0 4px #fff,0 10px 30px #0008;touch-action:none}
 .cropview canvas{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
 #cropZoom{width:100%;accent-color:var(--accent)}
+.kbd{display:inline-block;border:1px solid #fff4;border-radius:6px;padding:0 6px;margin-left:6px;font-size:.8em;opacity:.7}
+@media (hover:none){.kbd{display:none}}
 </style>
 </head>
 <body>
@@ -385,7 +387,7 @@ details.scard .board{margin-top:12px}
   </div>
   </div>
   </div>
-  <p class="note" id="verNote">Version 24</p>
+  <p class="note" id="verNote">Version 25</p>
 </section>
 
 <!-- LOADING -->
@@ -429,7 +431,7 @@ details.scard .board{margin-top:12px}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 24</p>
+    <p class="note">Version 25</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -467,7 +469,7 @@ details.scard .board{margin-top:12px}
       <div class="obtns"><button class="btn" style="background:var(--ok)" id="rightBtn">Richtig</button><button class="btn hide" style="background:#ffd23f" id="rightBothBtn">Titel + Interpret</button><button class="btn" style="background:var(--bad);color:#fff" id="wrongBtn">Falsch</button></div>
     </div>
     <div class="mod" id="modBox">Moderator: Enter gedrückt halten für die Lösung</div>
-    <div style="margin-top:10px"><button class="btn sec" id="revealBtn">Keiner weiß es, auflösen</button></div>
+    <div style="margin-top:10px"><button class="btn sec" id="revealBtn">Keiner weiß es, auflösen <small class="kbd">⇧</small></button></div>
   </div>
 
   <!-- Solo -->
@@ -480,7 +482,7 @@ details.scard .board{margin-top:12px}
     </form>
     <p class="note" style="text-align:center">Enter: abschicken · Umschalt+Enter: abschicken und bei Treffer direkt weiter</p>
     <div class="feedback" id="feedback"></div>
-    <div style="margin-top:8px"><button class="btn sec" id="skipBtn">Aufgeben, auflösen</button></div>
+    <div style="margin-top:8px"><button class="btn sec" id="skipBtn">Aufgeben, auflösen <small class="kbd">⇧</small></button></div>
   </div>
 
   <div class="panel revealp hide" id="revealPanel"><div class="rbg" id="rbg"></div>
@@ -519,7 +521,7 @@ details.scard .board{margin-top:12px}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="24";
+const VERSION="25";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -1070,6 +1072,18 @@ document.addEventListener("keydown",e=>{
   }
   const n=+e.key; if(S.mode==="party"&&n>=1&&n<=G.players.length)buzz(n-1);
   if(e.key===" "){e.preventDefault();$("playBtn").click();}
+});
+
+// Umschalt allein antippen: auflösen (bzw. nach der Auflösung weiter)
+let shiftSolo=0;
+document.addEventListener("keydown",e=>{shiftSolo=(e.key==="Shift"&&!e.repeat)?performance.now():(e.key==="Shift"?shiftSolo:0);},true);
+document.addEventListener("pointerdown",()=>{shiftSolo=0;},true);
+document.addEventListener("keyup",e=>{
+  if(e.key!=="Shift"||!shiftSolo||performance.now()-shiftSolo>700){shiftSolo=0;return;} shiftSolo=0;
+  if(!G||G.ended||$("game").classList.contains("hide"))return;
+  if(G.cur.done){if(!$("revealPanel").classList.contains("hide"))$("nextBtn").click();return;}
+  if(!isParty())$("skipBtn").click();
+  else if(!$("revealBtn").classList.contains("hide"))$("revealBtn").click();
 });
 
 // Solo
