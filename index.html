@@ -331,7 +331,16 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
   <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
   <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <p class="note" id="verNote">Version 19</p>
+  <div style="margin-top:18px"><button type="button" class="btn sec" id="fbOpen">💬 Feedback &amp; Wünsche</button></div>
+  <div class="panel hide" id="fbPanel" style="margin-top:12px">
+    <h2 style="margin-top:0">Feedback &amp; Wünsche</h2>
+    <div class="chips" id="fbType"><button type="button" class="chip on" data-v="idee">Feature-Wunsch</button><button type="button" class="chip" data-v="feedback">Feedback</button><button type="button" class="chip" data-v="bug">Fehler</button></div>
+    <textarea id="fbText" maxlength="2000" rows="4" placeholder="Was wünschst du dir, was gefällt dir, was klappt nicht?" style="width:100%;margin-top:10px;box-sizing:border-box;font:inherit;padding:10px;border-radius:12px;border:1px solid #fff3;background:var(--panel2);color:inherit"></textarea>
+    <input type="text" id="fbContact" maxlength="100" placeholder="Name oder Kontakt (optional)" style="margin-top:8px">
+    <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn" id="fbSend">Absenden</button><button type="button" class="btn sec" id="fbClose">Schließen</button></div>
+    <p class="note" id="fbMsg"></p>
+  </div>
+  <p class="note" id="verNote">Version 20</p>
 </section>
 
 <!-- LOADING -->
@@ -375,7 +384,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 19</p>
+    <p class="note">Version 20</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -455,7 +464,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="19";
+const VERSION="20";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -652,6 +661,19 @@ function renderAuth(){
   };
   document.head.appendChild(s);
 })();
+let fbType="idee";
+document.querySelectorAll("#fbType .chip").forEach(c=>c.onclick=()=>{fbType=c.dataset.v;document.querySelectorAll("#fbType .chip").forEach(x=>x.classList.toggle("on",x===c));});
+$("fbOpen").onclick=()=>{$("fbPanel").classList.toggle("hide");$("fbMsg").textContent="";if(!$("fbPanel").classList.contains("hide"))$("fbText").focus();};
+$("fbClose").onclick=()=>$("fbPanel").classList.add("hide");
+$("fbSend").onclick=async()=>{
+  const text=$("fbText").value.trim(); if(text.length<3){$("fbMsg").textContent="Schreib bitte ein paar Worte.";return;}
+  if(!SB.client){$("fbMsg").textContent="Feedback ist gerade nicht erreichbar.";return;}
+  $("fbSend").disabled=true; $("fbMsg").textContent="Sende…";
+  const {error}=await SB.client.from("feedback").insert({kind:fbType,text,contact:$("fbContact").value.trim()||null,name:PROFILE.name||null,user_id:SB.user?SB.user.id:null,version:VERSION,ua:navigator.userAgent.slice(0,200)});
+  $("fbSend").disabled=false;
+  if(error){$("fbMsg").textContent="Das hat nicht geklappt, versuch es später nochmal.";return;}
+  $("fbText").value=""; $("fbMsg").textContent="Danke! Dein Feedback ist angekommen.";
+};
 $("authForm").addEventListener("submit",async e=>{
   e.preventDefault(); if(!SB.client)return; const email=$("authEmail").value.trim(); if(!email)return;
   $("authMsg").textContent="Sende Link…";

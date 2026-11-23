@@ -35,3 +35,20 @@ create policy "eigene scores löschen" on public.solo_scores for delete to authe
 grant usage on schema public to authenticated;
 grant select, insert, update on public.profiles to authenticated;
 grant select, insert, delete on public.solo_scores to authenticated;
+
+-- Feedback: jeder darf schreiben, lesen nur im Supabase-Dashboard
+create table if not exists public.feedback (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  kind text not null check (kind in ('idee','feedback','bug')),
+  text text not null check (char_length(text) between 3 and 2000),
+  contact text check (char_length(contact) <= 100),
+  name text check (char_length(name) <= 40),
+  user_id uuid references auth.users on delete set null,
+  version text, ua text
+);
+alter table public.feedback enable row level security;
+create policy "feedback senden" on public.feedback for insert to anon, authenticated
+  with check (user_id is null or user_id = auth.uid());
+grant usage on schema public to anon;
+grant insert on public.feedback to anon, authenticated;
