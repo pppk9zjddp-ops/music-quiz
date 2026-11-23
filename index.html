@@ -271,6 +271,12 @@ details.scard .board{margin-top:12px}
   .sgrid{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:start}
   .startbar{position:static;background:none}
 }
+
+.cropbox{position:fixed;inset:0;z-index:90;background:#000c;display:grid;place-items:center;padding:16px}
+.cropin{background:var(--panel2);border-radius:20px;padding:18px;width:min(340px,100%);box-sizing:border-box}
+.cropview{width:260px;max-width:100%;aspect-ratio:1;margin:0 auto;border-radius:50%;overflow:hidden;box-shadow:0 0 0 4px #fff,0 10px 30px #0008;touch-action:none}
+.cropview canvas{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#cropZoom{width:100%;accent-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -379,7 +385,7 @@ details.scard .board{margin-top:12px}
   </div>
   </div>
   </div>
-  <p class="note" id="verNote">Version 22</p>
+  <p class="note" id="verNote">Version 23</p>
 </section>
 
 <!-- LOADING -->
@@ -423,7 +429,7 @@ details.scard .board{margin-top:12px}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 22</p>
+    <p class="note">Version 23</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -499,11 +505,21 @@ details.scard .board{margin-top:12px}
 </section>
 
 </div>
-<script src="config.js"></script>
+<div class="cropbox hide" id="cropBox" role="dialog" aria-label="Foto zuschneiden">
+  <div class="cropin">
+    <h2 style="margin-top:0">Foto zuschneiden</h2>
+    <div class="cropview"><canvas id="cropCv"></canvas></div>
+    <p class="note" style="text-align:center">Ziehen zum Verschieben, Regler oder zwei Finger zum Zoomen.</p>
+    <input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" aria-label="Zoom">
+    <div class="row" style="margin-top:12px"><button class="btn" id="cropOk" type="button">Übernehmen</button><button class="btn sec" id="cropCancel" type="button">Abbrechen</button></div>
+  </div>
+</div>
+<script>window.EDS_DEFAULT_SB={url:"https://yvxovkieikzbxepjqcob.supabase.co",key:"sb_publishable_QEfpgjZR7cvri8A0D77r4w_tq1X33VH"};</script>
+<script src="config.js?v=22b"></script>
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="22";
+const VERSION="23";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -645,15 +661,36 @@ async function deezerPlaylist(id){
 // ---------- Profil (lokal; später optional per Login synchronisiert) ----------
 let PROFILE={}; try{PROFILE=JSON.parse(localStorage.getItem("eds_profile")||"{}");}catch(e){}
 function saveProfile(){try{localStorage.setItem("eds_profile",JSON.stringify(PROFILE));}catch(e){}}
-function squarePhoto(file,cb){const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=c.height=200;const s=Math.min(img.width,img.height);
-  c.getContext("2d").drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,200,200);URL.revokeObjectURL(img.src);cb(c.toDataURL("image/jpeg",.72));};img.src=URL.createObjectURL(file);}
+// Foto zuschneiden: verschieben (ziehen), zoomen (Regler, Mausrad, zwei Finger)
+function squarePhoto(file,cb){const img=new Image();img.onload=()=>openCrop(img,d=>{URL.revokeObjectURL(img.src);if(d)cb(d);});img.src=URL.createObjectURL(file);}
+function openCrop(img,done){
+  const V=260,box=$("cropBox"),cv=$("cropCv"),z=$("cropZoom"),ctx=cv.getContext("2d");cv.width=cv.height=V*2;
+  const base=V/Math.min(img.width,img.height);let k=1,x=0,y=0;const pts=new Map();let pinch0=0,k0=1;
+  const clamp=()=>{const s=base*k,w=img.width*s,hh=img.height*s;x=Math.min(0,Math.max(V-w,x));y=Math.min(0,Math.max(V-hh,y));};
+  const draw=()=>{clamp();ctx.setTransform(2,0,0,2,0,0);ctx.fillStyle="#000";ctx.fillRect(0,0,V,V);ctx.drawImage(img,x,y,img.width*base*k,img.height*base*k);};
+  const zoomTo=(nk,cx=V/2,cy=V/2)=>{nk=Math.max(1,Math.min(4,nk));const r=nk/k;x=cx-(cx-x)*r;y=cy-(cy-y)*r;k=nk;z.value=k;draw();};
+  x=(V-img.width*base)/2;y=(V-img.height*base)/2;z.value=1;draw();
+  const rel=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*V/r.width,(e.clientY-r.top)*V/r.height];};
+  cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,rel(e));if(pts.size===2){const[a,b]=[...pts.values()];pinch0=Math.hypot(a[0]-b[0],a[1]-b[1]);k0=k;}};
+  cv.onpointermove=e=>{if(!pts.has(e.pointerId))return;const p=rel(e),q=pts.get(e.pointerId);
+    if(pts.size===1){x+=p[0]-q[0];y+=p[1]-q[1];pts.set(e.pointerId,p);draw();}
+    else{pts.set(e.pointerId,p);const[a,b]=[...pts.values()];const d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pinch0)zoomTo(k0*d/pinch0,(a[0]+b[0])/2,(a[1]+b[1])/2);}};
+  cv.onpointerup=cv.onpointercancel=e=>{pts.delete(e.pointerId);pinch0=0;};
+  cv.onwheel=e=>{e.preventDefault();const[cx,cy]=rel(e);zoomTo(k*(e.deltaY<0?1.1:1/1.1),cx,cy);};
+  z.oninput=()=>zoomTo(+z.value);
+  const close=d=>{box.classList.add("hide");document.body.style.overflow="";done(d);};
+  $("cropOk").onclick=()=>{const o=document.createElement("canvas");o.width=o.height=200;const s=base*k;
+    o.getContext("2d").drawImage(img,-x/s,-y/s,V/s,V/s,0,0,200,200);close(o.toDataURL("image/jpeg",.72));};
+  $("cropCancel").onclick=()=>close(null);
+  box.classList.remove("hide");document.body.style.overflow="hidden";
+}
 let profDraft=null;
 function renderProfile(){
   $("profName").textContent=PROFILE.name||"Profil anlegen";
   $("profAv").innerHTML=PROFILE.photo?`<img src="${PROFILE.photo}" alt="">`:(PROFILE.name?esc(PROFILE.name[0].toUpperCase()):"+");
 }
 $("profPill").onclick=()=>{profDraft={...PROFILE};$("profNameIn").value=PROFILE.name||"";$("profPrev").innerHTML=PROFILE.photo?`<img src="${PROFILE.photo}" alt="">`:$("profPrev").innerHTML;$("profPanel").classList.toggle("hide");};
-$("profPhoto").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];if(!f)return;squarePhoto(f,d=>{profDraft.photo=d;$("profPrev").innerHTML=`<img src="${d}" alt="">`;});});
+$("profPhoto").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;squarePhoto(f,d=>{profDraft.photo=d;$("profPrev").innerHTML=`<img src="${d}" alt="">`;});});
 $("profSave").onclick=()=>{PROFILE={...profDraft,name:$("profNameIn").value.trim().slice(0,20)};saveProfile();renderProfile();$("profPanel").classList.add("hide");pushProfile();};
 $("profClose").onclick=()=>$("profPanel").classList.add("hide");
 renderProfile();
@@ -692,7 +729,7 @@ function renderAuth(){
   $("profNote").textContent=SB.user?"Dein Profil und deine Solo-Bestenliste werden mit deinem Account synchronisiert.":"Ohne Login wird dein Profil nur auf diesem Gerät gespeichert. Es wird beim Beitreten als Team und in der Solo-Bestenliste genutzt.";
 }
 (function initSupabase(){
-  const cfg=window.EDS_SUPABASE||{}; if(!cfg.url||!cfg.key||location.protocol==="file:")return;
+  let cfg=window.EDS_SUPABASE||{}; if(!cfg.url||!cfg.key)cfg=window.EDS_DEFAULT_SB||{}; if(!cfg.url||!cfg.key||location.protocol==="file:")return;
   const s=document.createElement("script"); s.src="lib/supabase.js";
   s.onload=async()=>{
     SB.client=supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,detectSessionInUrl:true,flowType:"implicit"}});
@@ -1231,15 +1268,8 @@ function initBuzzer(code,bIdx){
   const setPrev=()=>{if(photo){$("bPhotoPrev").innerHTML=`<img src="${photo}" alt="">`;$("bPhotoTxt").textContent="Neues Foto aufnehmen";}};
   setPrev();
   $("bPhoto").addEventListener("change",e=>{
-    const f=e.target.files&&e.target.files[0]; if(!f)return;
-    const img=new Image(); img.onload=()=>{
-      const S2=200,c=document.createElement("canvas");c.width=c.height=S2;const x=c.getContext("2d");
-      const s=Math.min(img.width,img.height);x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,S2,S2);
-      photo=c.toDataURL("image/jpeg",.72); try{localStorage.setItem("ow_photo",photo);}catch(err){}
-      URL.revokeObjectURL(img.src); setPrev();
-      if(st)send({t:"join",name,photo});
-    };
-    img.src=URL.createObjectURL(f);
+    const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f)return;
+    squarePhoto(f,d=>{photo=d; try{localStorage.setItem("ow_photo",photo);}catch(err){} setPrev(); if(st)send({t:"join",name,photo});});
   });
   let client=null,st=null,name="",prev=null,lastState=0,joinedAt=0,timer=null,bcdT=null;
   const hostTopic=TOPIC+code+"/h", myTopic=TOPIC+code+"/c/"+cid;
