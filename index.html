@@ -104,12 +104,15 @@ h2{font-family:var(--display);letter-spacing:.12em;font-size:.8rem}
 /* Schallplatte */
 .stage{display:flex;flex-direction:column;align-items:center;margin:10px 0 6px}
 .play{width:min(62vw,250px);height:auto;aspect-ratio:1;border-radius:50%;margin:14px auto 10px;position:relative;
-  background:radial-gradient(circle,#0000 0 31%,#0b0b10 31.5%),repeating-radial-gradient(circle,#15131d 0 2px,#0c0b12 2px 4px);
-  box-shadow:0 20px 60px #000a,0 0 0 6px #ffffff0d,inset 0 0 0 2px #ffffff10;color:#14101f;animation:spin 2.4s linear infinite;animation-play-state:paused}
+  background:repeating-radial-gradient(circle,var(--g1,#17151f) 0 1.5px,var(--g2,#0b0a10) 1.5px 3.5px);
+  box-shadow:0 20px 60px #000a,0 0 0 6px #ffffff0d,inset 0 0 0 2px #ffffff10;color:var(--lblfg,#14101f);animation:spin var(--spd,2.4s) linear infinite;animation-direction:var(--dir,normal);animation-play-state:paused;transition:filter .3s}
 .play::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 30deg,#fff0 0 10%,#ffffff22 14%,#fff0 20% 60%,#ffffff18 64%,#fff0 70%);pointer-events:none}
-.play.playing{animation:spin 2.4s linear infinite;box-shadow:0 20px 80px #7b5cff55,0 0 0 6px #ffffff14}
+.play.playing{animation:spin var(--spd,2.4s) linear infinite;animation-direction:var(--dir,normal);box-shadow:0 20px 80px var(--glow,#7b5cff55),0 0 0 6px #ffffff14}
 @keyframes spin{to{transform:rotate(360deg)}}
-.vlabel{position:absolute;inset:34%;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#0b0b10 0 6%,transparent 6.5%),linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:inset 0 0 0 3px #0002}
+.vlabel{position:absolute;inset:30%;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#0b0b10 0 5%,transparent 5.5%),var(--lbl,linear-gradient(135deg,var(--accent),var(--accent2)));background-size:cover;background-position:center;box-shadow:inset 0 0 0 3px #0002,0 0 0 4px #0006;overflow:hidden}
+.vlabel .ltxt{position:absolute;left:0;right:0;bottom:14%;text-align:center;font-family:var(--display);font-weight:800;font-size:clamp(7px,1.3vw,11px);letter-spacing:.14em;text-transform:uppercase;color:var(--lblfg,#14101f);opacity:.85}
+.vlabel svg{filter:drop-shadow(0 1px 0 #0003)}
+.play.fx-water{filter:hue-rotate(-30deg) saturate(.7) blur(.6px)}
 .vlabel svg{width:42%;height:42%}
 .play:disabled{opacity:.6}
 .eq{display:flex;gap:4px;align-items:flex-end;height:34px;margin:2px 0 6px}
@@ -159,7 +162,7 @@ body.myturn{animation:flash .6s ease-out 3}
 @keyframes flash{50%{background:var(--team)}}
 .bmsg{font-family:var(--display)}
 #bTeam{font-family:var(--display);font-size:1.5rem!important}
-.play.playing .vlabel svg{animation:spin 2.4s linear infinite reverse}
+.play.playing .vlabel svg{animation:spin var(--spd,2.4s) linear infinite;animation-direction:var(--rdir,reverse)}
 .obtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;width:min(520px,100%)}
 .ohint{font-weight:700;opacity:.9;margin-bottom:4px}
 .guess{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:12px}
@@ -270,7 +273,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 
   <h2>Challenges</h2>
   <div class="chips" id="chalChips"></div>
-  <p class="note" style="margin-top:6px">Pro Song wird zufällig eine der gewählten Varianten gespielt.</p>
+  <p class="note" style="margin-top:6px" id="chalNote"></p>
 
   <h2>Interpret</h2>
   <div class="chips" id="artistChips">
@@ -289,7 +292,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
   <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
   <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <p class="note" id="verNote">Version 11</p>
+  <p class="note" id="verNote">Version 13</p>
 </section>
 
 <!-- LOADING -->
@@ -333,7 +336,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 11</p>
+    <p class="note">Version 13</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -350,7 +353,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div class="gl">
   <div class="challenge"><span class="badge" id="chalName"></span><div class="desc" id="chalDesc"></div></div>
   <div class="stage">
-    <button class="play" id="playBtn" aria-label="Abspielen oder pausieren"><span class="vlabel"><svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></button>
+    <button class="play" id="playBtn" aria-label="Abspielen oder pausieren"><span class="vlabel" id="vlabel"><span class="ltxt" id="ltxt"></span><svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></button>
     <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <div class="timer"><span id="playLabel">Abspielen</span> · <span id="timer">0:00</span></div>
   </div>
@@ -410,7 +413,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="11";
+const VERSION="13";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -491,7 +494,9 @@ function updEndChips(){
 $("modeChips").addEventListener("click",updEndChips); updEndChips();
 function newGame(pool,players){
   const n=+S.end.slice(1), byPts=S.end[0]==="p";
-  return {pool,players,round:0,total:byPts?pool.length:Math.min(n,pool.length),goal:byPts?n:0,chals:[...S.chals]};
+  // in jedem 5er-Block genau ein zufälliger Spezial-Song
+  const slots=new Set(); for(let b=0;b*5<pool.length;b++) slots.add(b*5+(Math.random()*5|0));
+  return {pool,players,round:0,total:byPts?pool.length:Math.min(n,pool.length),goal:byPts?n:0,specials:[...S.chals].filter(k=>k!=="classic"),slots};
 }
 function goalReached(){return G.goal>0&&G.players.some(p=>p.pts>=G.goal);}
 const ARTIST_NOTES={none:"Nur der Songtitel zählt.",bonus:"Titel zählt, der Interpret gibt Extrapunkte.",required:"Nur Titel und Interpret zusammen zählen."};
@@ -499,9 +504,14 @@ single("artistChips","artist",()=>$("artistNote").textContent=ARTIST_NOTES[S.art
 $("artistNote").textContent=ARTIST_NOTES[S.artist];
 function updBoardBox(){$("boardBox").classList.toggle("hide",S.mode!=="solo"||!loadBoard().length);renderBoard("boardSetup");}
 $("modeChips").addEventListener("click",updBoardBox);
+// Klassisch ist immer an. Gewählte Spezial-Challenges kommen bei etwa jedem 5. Song.
+function chalNote(){const sp=[...S.chals].filter(k=>k!=="classic");
+  $("chalNote").textContent=sp.length?`Etwa jeder 5. Song ist eine Spezial-Challenge (${sp.map(k=>CHALLENGES[k].name).join(", ")}), der Rest läuft normal.`:"Alle Songs laufen normal. Wähle Spezial-Challenges für etwa jeden 5. Song.";}
 $("chalChips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;const k=b.dataset.v;
-  if(S.chals.has(k)){if(S.chals.size>1)S.chals.delete(k);}else S.chals.add(k);
-  b.classList.toggle("on",S.chals.has(k));});
+  if(k==="classic")return;
+  if(S.chals.has(k))S.chals.delete(k);else S.chals.add(k);
+  b.classList.toggle("on",S.chals.has(k));chalNote();});
+chalNote();
 renderTeams();
 
 // ---------- Musikquellen (JSONP, kein Server nötig) ----------
@@ -688,6 +698,38 @@ function resetAudio(){pause(); A.pos=0; A.elapsed=0; audioEl.removeAttribute("sr
 function speedPoints(){return Math.max(10,Math.round(100-A.elapsed*3));}
 function renderTimer(){
   if(S.mode==="solo"&&G&&G.cur&&!G.cur.done){$("speedPts").textContent=speedPoints();}const s=Math.floor(A.elapsed);$("timer").textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;}
+// Schallplatte je nach Thema und Challenge gestalten (verrät nichts über den Song)
+const RECORDS={
+  "Party":{g1:"#1d1030",g2:"#0c0716",lbl:"conic-gradient(from 0deg,#ff3d7f,#7b5cff,#00d4ff,#ff3d7f)",fg:"#fff",glow:"#ff3d7f66",txt:"Party"},
+  "Volksfest":{g1:"#16233a",g2:"#0a111d",lbl:"linear-gradient(60deg,#fff 25%,transparent 25% 75%,#fff 75%) 0 0/12px 21px,linear-gradient(-60deg,#fff 25%,transparent 25% 75%,#fff 75%) 0 0/12px 21px,#2f7fd8",fg:"#0a2a5c",glow:"#2f7fd866",txt:"Volksfest"},
+  "Best of 2026":{g1:"#2a2208",g2:"#120e02",lbl:"radial-gradient(circle at 30% 25%,#fff6c8,#ffd23f 35%,#b8860b 80%)",fg:"#3a2a00",glow:"#ffd23f66",txt:"2026"},
+  "Charts aktuell":{g1:"#2a0e0e",g2:"#120505",lbl:"linear-gradient(135deg,#ff5f2e,#ff2e63)",fg:"#fff",glow:"#ff5f2e66",txt:"Charts"},
+  "Ballermann":{g1:"#0c3b3a",g2:"#05201f",lbl:"radial-gradient(circle at 50% 120%,#ff8a00 0 30%,transparent 31%),linear-gradient(#ffe259,#ffa751)",fg:"#5a2a00",glow:"#00c2b866",txt:"Malle"},
+  "Schlager":{g1:"#2a0f22",g2:"#140611",lbl:"radial-gradient(circle at 30% 30%,#fff 0 3%,transparent 4%),radial-gradient(circle at 70% 60%,#fff 0 2%,transparent 3%),linear-gradient(135deg,#ff7ac6,#c13dff)",fg:"#fff",glow:"#ff7ac666",txt:"Schlager"},
+  "Deutschrap":{g1:"#121212",g2:"#050505",lbl:"repeating-linear-gradient(45deg,#111 0 6px,#1c1c1c 6px 12px)",fg:"#7dff6a",glow:"#7dff6a44",txt:"Deutschrap"},
+  "80er":{g1:"#1a0b2e",g2:"#0a0414",lbl:"linear-gradient(#ff2a9d 0 50%,#2af0ff 50%)",fg:"#14001f",glow:"#ff2a9d66",txt:"80er"},
+  "90er":{g1:"#0b2a2a",g2:"#041414",lbl:"conic-gradient(#00c9a7 0 25%,#845ec2 0 50%,#ffc75f 0 75%,#ff6f91 0)",fg:"#111",glow:"#00c9a766",txt:"90er"},
+  "2000er":{g1:"#22262c",g2:"#0e1014",lbl:"linear-gradient(135deg,#e6e9ef,#9aa3b2 45%,#f5f7fa 55%,#7c8594)",fg:"#1b1f27",glow:"#c8d0dc55",txt:"2000er"},
+  "2010er":{g1:"#1b1830",g2:"#0b0a16",lbl:"linear-gradient(135deg,#a8edea,#fed6e3)",fg:"#3b2c5a",glow:"#a8edea55",txt:"2010er"},
+  "Deutsch":{g1:"#1a1a1a",g2:"#0a0a0a",lbl:"linear-gradient(#111 0 33.3%,#dd0000 33.3% 66.6%,#ffce00 66.6%)",fg:"#fff",glow:"#ffce0044",txt:"Deutsch"}
+};
+function applyRecord(){
+  const pl=$("playBtn"), lb=$("vlabel"); let r=RECORDS[S.cat];
+  if(S.cat==="Eigene Künstler"){
+    const pics=MY_ARTISTS.filter(a=>a.pic).slice(0,4).map(a=>a.pic.replace("56x56","250x250"));
+    const pos=["0 0","100% 0","0 100%","100% 100%"];
+    r={g1:"#1d1a2a",g2:"#0b0a12",fg:"#fff",glow:"#7b5cff66",txt:"",
+       lbl:pics.length>1?pics.map((u,i)=>`url("${u}") ${pos[i]}/50% 50% no-repeat`).join(",")+",#2c2450":pics.length?`url("${pics[0]}") center/cover`:"linear-gradient(135deg,var(--accent),var(--accent2))"};
+  }
+  r=r||{};
+  pl.style.setProperty("--g1",r.g1||"#17151f"); pl.style.setProperty("--g2",r.g2||"#0b0a10");
+  pl.style.setProperty("--lbl",r.lbl||"linear-gradient(135deg,#ffd23f,#ff3d7f)"); pl.style.setProperty("--lblfg",r.fg||"#14101f");
+  pl.style.setProperty("--glow",r.glow||"#7b5cff55"); $("ltxt").textContent=r.txt||"";
+  const ch=G&&G.cur?G.cur.chal:"classic";
+  pl.style.setProperty("--spd",ch==="turbo"?"1s":ch==="slow"?"5s":"2.4s");
+  pl.style.setProperty("--dir",ch==="reverse"?"reverse":"normal"); pl.style.setProperty("--rdir",ch==="reverse"?"normal":"reverse");
+  pl.classList.toggle("fx-water",ch==="water");
+}
 function setPlayUI(){
   document.body.classList.toggle("is-playing",A.playing);
   $("playBtn").classList.toggle("playing",A.playing);
@@ -716,7 +758,7 @@ $("startBtn").onclick=async()=>{
 async function startRound(){
   resetAudio();
   const track=G.pool[G.round];
-  const chal=G.chals[Math.random()*G.chals.length|0];
+  const chal=G.specials.length&&G.slots.has(G.round)?G.specials[Math.random()*G.specials.length|0]:"classic";
   G.cur={track,chal,locked:new Set(),buzzed:null,done:false,buffer:null};
   show("game");
   $("roundInfo").textContent=G.goal?`Song ${G.round+1} · bis ${G.goal} Punkte`:`Song ${G.round+1} von ${G.total}`;
@@ -728,7 +770,7 @@ async function startRound(){
     catch(e){G.cur.chal="classic";} // Fallback, falls die Datei nicht geladen werden kann
   }
   const c=CHALLENGES[G.cur.chal];
-  $("chalName").textContent=c.name; $("chalDesc").textContent=c.desc;
+  $("chalName").textContent=c.name; applyRecord(); $("chalDesc").textContent=c.desc;
   $("playBtn").disabled=false; setPlayUI(); renderScore();
   const party=isParty();
   $("partyArea").classList.toggle("hide",!party); $("soloArea").classList.toggle("hide",party);
