@@ -15,7 +15,7 @@ Musik-Quiz im Browser: Der Song läuft, wer ihn erkennt, buzzert.
 - Am Laptop (ab 1000 px Breite) nutzt die Moderator-Ansicht die volle Breite.
 
 ## Einstellungen
-- **Musik:** Themen-Playlists von Deezer (Party, Volksfest, Best of 2026, Charts aktuell, Ballermann, Schlager, Deutschrap) oder Jahrzehnte/Künstler über iTunes.
+- **Musik:** Themen-Playlists von Deezer (Party, Volksfest, Best of 2026, Charts aktuell, Ballermann, Schlager, Deutschrap), Jahrzehnte oder eigene Künstler (Suche mit Auswahlliste, Songs exakt per Deezer-Artist-ID, gleichmäßig verteilt).
 - **Spielende:** feste Songanzahl (5/10/20) oder im Multiplayer bis 5/10/15 Punkte.
 - **Interpret:** nicht nötig, Bonus (Party +1, Solo +50 %) oder Pflicht.
 - **Challenges:** Klassisch, Rückwärts, Unter Wasser, Turbo, Zeitlupe.

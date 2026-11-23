@@ -218,6 +218,17 @@ body.myturn{animation:flash .6s ease-out 3}
 .photo input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .pcirc{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:var(--panel2);color:var(--muted);overflow:hidden;flex:none}
 .pcirc svg{width:30px;height:30px}.pcirc img{width:100%;height:100%;object-fit:cover}
+.achips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.achip{display:inline-flex;align-items:center;gap:8px;background:var(--panel2);border-radius:999px;padding:4px 6px 4px 4px;font-weight:700}
+.achip img{width:28px;height:28px;border-radius:50%}
+.achip button{border:0;background:#ffffff1a;color:var(--text);width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:1rem;line-height:1}
+.acwrap{position:relative}
+.alist{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;list-style:none;margin:0;padding:6px;background:#1d1834;border:1px solid #ffffff22;border-radius:14px;box-shadow:0 20px 50px #000a;max-height:320px;overflow:auto}
+.alist li{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer}
+.alist li.sel,.alist li:hover{background:#ffd23f22}
+.alist img,.alist .ph{width:40px;height:40px;border-radius:50%;background:var(--panel2);flex:none}
+.alist b{display:block}.alist small{color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:70;background:#2a1f10;border:1px solid var(--accent);color:var(--text);padding:12px 16px;border-radius:14px;max-width:min(560px,calc(100vw - 32px));font-weight:600;box-shadow:0 10px 30px #000a}
 canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 @media (prefers-reduced-motion:reduce){body::before,.play,.play.playing,.eqi i,body.is-playing .eq i,.bbtn::after,.overlay,.otag,body.myturn{animation:none!important}}
 </style>
@@ -225,6 +236,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <body>
 <div class="wrap">
 
+<div class="toast hide" id="toast" role="status"></div>
 <!-- SETUP -->
 <section id="setup">
   <h1 class="logo"><span class="eqi"><i></i><i></i><i></i><i></i></span>Erkennst du<br><span>den Song?</span></h1>
@@ -247,7 +259,14 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 
   <h2>Musik</h2>
   <div class="chips" id="catChips"></div>
-  <input type="text" id="customArtists" class="hide" placeholder="Künstler, mit Komma getrennt" style="margin-top:10px">
+  <div id="artistPick" class="hide">
+    <div class="achips" id="aChips"></div>
+    <div class="acwrap">
+      <input type="text" id="aSearch" placeholder="Künstler suchen, z.B. Helene Fischer" autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="aList">
+      <ul class="alist hide" id="aList" role="listbox"></ul>
+    </div>
+    <p class="note" id="aNote">Tippen, dann den richtigen Künstler aus der Liste wählen.</p>
+  </div>
 
   <h2>Challenges</h2>
   <div class="chips" id="chalChips"></div>
@@ -270,7 +289,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
   <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
   <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <p class="note" id="verNote">Version 8</p>
+  <p class="note" id="verNote">Version 9</p>
 </section>
 
 <!-- LOADING -->
@@ -314,7 +333,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 8</p>
+    <p class="note">Version 9</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -391,7 +410,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="8";
+const VERSION="9";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -458,7 +477,7 @@ Object.entries(CHALLENGES).forEach(([k,v])=>{const b=document.createElement("but
 single("modeChips","mode",()=>$("teamBox").classList.toggle("hide",S.mode!=="party"));
 const isParty=()=>S.mode!=="solo";
 single("teamCount","teams",renderTeams);
-single("catChips","cat",()=>$("customArtists").classList.toggle("hide",S.cat!=="Eigene Künstler"));
+single("catChips","cat",()=>$("artistPick").classList.toggle("hide",S.cat!=="Eigene Künstler"));
 single("roundChips","end");
 function updEndChips(){
   const solo=S.mode==="solo";
@@ -503,7 +522,7 @@ async function deezer(artist){
   const d=await jsonp(`https://api.deezer.com/search?q=${encodeURIComponent('artist:"'+artist+'"')}&limit=25&output=jsonp`);
   return (d.data||[]).filter(r=>r.preview).map(r=>({title:clean(r.title),artist:r.artist.name,preview:r.preview,cover:r.album.cover_medium}));
 }
-async function fetchArtist(a){
+async function fetchArtist(a){ // (alt, ungenutzt)
   try{const r=await itunes(a); if(r.length) return r;}catch(e){}
   try{return await deezer(a);}catch(e){return [];}
 }
@@ -513,20 +532,84 @@ async function deezerPlaylist(id){
   const d=await jsonp(url,10000);
   return (d.data||[]).filter(t=>t.preview&&t.readable!==false).map(t=>({title:clean(t.title_short||t.title),artist:t.artist.name,preview:t.preview,cover:t.album&&t.album.cover_medium}));
 }
+// ---------- Künstler: exakt per Deezer-Artist-ID ----------
+let MY_ARTISTS=[]; try{MY_ARTISTS=JSON.parse(localStorage.getItem("eds_artists")||"[]");}catch(e){}
+function saveArtists(){try{localStorage.setItem("eds_artists",JSON.stringify(MY_ARTISTS));}catch(e){}}
+function renderAChips(){
+  $("aChips").innerHTML=MY_ARTISTS.map((a,i)=>`<span class="achip">${a.pic?`<img src="${a.pic}" alt="">`:""}${esc(a.name)}<button type="button" data-i="${i}" aria-label="${esc(a.name)} entfernen">×</button></span>`).join("");
+}
+$("aChips").addEventListener("click",e=>{const b=e.target.closest("button[data-i]");if(!b)return;MY_ARTISTS.splice(+b.dataset.i,1);saveArtists();renderAChips();});
+let aT=null,aSeq=0,aRes=[],aSel=-1;
+function fans(n){return n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" Mio. Fans":n>=1e3?Math.round(n/1e3)+" Tsd. Fans":n+" Fans";}
+function renderAList(){
+  const l=$("aList"); l.classList.toggle("hide",!aRes.length); $("aSearch").setAttribute("aria-expanded",aRes.length?"true":"false");
+  l.innerHTML=aRes.map((a,i)=>`<li role="option" data-i="${i}" class="${i===aSel?"sel":""}">${a.pic?`<img src="${a.pic}" alt="">`:"<span class=ph></span>"}<span><b>${esc(a.name)}</b><small>${fans(a.fans||0)}</small></span></li>`).join("");
+}
+function addArtist(a){
+  if(!MY_ARTISTS.some(x=>x.id===a.id)){MY_ARTISTS.push(a);saveArtists();renderAChips();}
+  $("aSearch").value="";aRes=[];aSel=-1;renderAList();$("aSearch").focus();
+}
+$("aSearch").addEventListener("input",()=>{
+  clearTimeout(aT); const q=$("aSearch").value.trim(); if(q.length<2){aRes=[];renderAList();return;}
+  aT=setTimeout(async()=>{const my=++aSeq;
+    try{const d=await jsonp(`https://api.deezer.com/search/artist?q=${encodeURIComponent(q)}&limit=6&output=jsonp`);
+      if(my!==aSeq)return; aRes=(d.data||[]).map(a=>({id:a.id,name:a.name,pic:a.picture_small,fans:a.nb_fan})); aSel=aRes.length?0:-1; renderAList();
+      if(!aRes.length) $("aNote").textContent=`Keinen Künstler zu „${q}“ gefunden.`; else $("aNote").textContent="Tippen, dann den richtigen Künstler aus der Liste wählen.";
+    }catch(e){$("aNote").textContent="Suche gerade nicht erreichbar. Internet prüfen.";}
+  },250);
+});
+$("aSearch").addEventListener("keydown",e=>{
+  if(e.key==="ArrowDown"){e.preventDefault();aSel=Math.min(aRes.length-1,aSel+1);renderAList();}
+  else if(e.key==="ArrowUp"){e.preventDefault();aSel=Math.max(0,aSel-1);renderAList();}
+  else if(e.key==="Enter"){e.preventDefault();if(aRes[aSel])addArtist(aRes[aSel]);}
+  else if(e.key==="Escape"){aRes=[];renderAList();}
+});
+$("aList").addEventListener("mousedown",e=>{const li=e.target.closest("li[data-i]");if(li){e.preventDefault();addArtist(aRes[+li.dataset.i]);}});
+$("aSearch").addEventListener("blur",()=>setTimeout(()=>{aRes=[];renderAList();},150));
+renderAChips();
+
+async function resolveArtist(name){ // Name -> Deezer-Artist (exakter Treffer bevorzugt)
+  const d=await jsonp(`https://api.deezer.com/search/artist?q=${encodeURIComponent(name)}&limit=5&output=jsonp`);
+  const list=d.data||[]; const n=norm(name);
+  const a=list.find(x=>norm(x.name)===n)||list.find(x=>isClose(n,norm(x.name)))||null;
+  return a&&{id:a.id,name:a.name};
+}
+async function artistTracks(a){ // nur Songs, bei denen genau dieser Künstler Hauptinterpret ist
+  let out=[];
+  try{const d=await jsonp(`https://api.deezer.com/artist/${a.id}/top?limit=50&output=jsonp`,10000);
+    out=(d.data||[]).filter(t=>t.preview&&t.artist&&t.artist.id===a.id).map(t=>({title:clean(t.title_short||t.title),artist:t.artist.name,preview:t.preview,cover:t.album&&t.album.cover_medium}));}catch(e){}
+  if(out.length<3){ // Ersatz: iTunes, aber nur exakt passender Künstlername
+    try{const r=await itunes(a.name); out=out.concat(r.filter(t=>norm(t.artist)===norm(a.name)));}catch(e){}
+  }
+  return out;
+}
+async function mapLimit(items,n,fn){const res=new Array(items.length);let i=0;
+  await Promise.all(Array.from({length:Math.min(n,items.length)},async()=>{while(i<items.length){const k=i++;try{res[k]=await fn(items[k]);}catch(e){res[k]=null;}}}));return res;}
+function showToast(t){const el=$("toast");el.textContent=t;el.classList.remove("hide");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.add("hide"),7000);}
+
 async function buildPool(){
   if(PLAYLISTS[S.cat]){
     const lists=await Promise.all(PLAYLISTS[S.cat].map(id=>deezerPlaylist(id).catch(()=>[])));
     const seen=new Set(),pool=[];
     lists.flat().forEach(t=>{const k=norm(t.title);if(k&&!seen.has(k)){seen.add(k);pool.push(t);}});
     if(!pool.length) throw new Error("Die Playlist konnte nicht geladen werden. Internet prüfen oder andere Kategorie wählen.");
-    return pool;
+    return shuffle(pool);
   }
-  let artists=CATS[S.cat];
-  if(S.cat==="Eigene Künstler") artists=$("customArtists").value.split(",").map(s=>s.trim()).filter(Boolean);
-  if(!artists.length) throw new Error("Bitte mindestens einen Künstler eintragen.");
-  const results=await Promise.all(artists.map(fetchArtist));
-  const seen=new Set(); const pool=[];
-  results.forEach(list=>list.slice(0,8).forEach(t=>{const k=norm(t.title);if(k&&!seen.has(k)){seen.add(k);pool.push(t);}}));
+  let artists;
+  if(S.cat==="Eigene Künstler"){
+    if(!MY_ARTISTS.length) throw new Error("Bitte mindestens einen Künstler auswählen.");
+    artists=MY_ARTISTS.map(a=>({id:a.id,name:a.name}));
+  }else{
+    artists=(await mapLimit(CATS[S.cat],4,resolveArtist)).map((a,i)=>a||{missing:CATS[S.cat][i]});
+  }
+  const lists=await mapLimit(artists,4,a=>a.missing?Promise.resolve([]):artistTracks(a));
+  const missing=artists.filter((a,i)=>!lists[i]||!lists[i].length).map(a=>a.missing||a.name);
+  // Pro Künstler mischen (Top 20), dann reihum verteilen, damit alle gleich oft drankommen
+  const seen=new Set();
+  const per=lists.map(l=>shuffle((l||[]).filter(t=>{const k=norm(t.artist)+"|"+norm(t.title);if(!norm(t.title)||seen.has(k))return false;seen.add(k);return true;}).slice(0,20)));
+  const order=shuffle(per.map((_,i)=>i)); const pool=[];
+  for(let r=0;r<20;r++){shuffle(order).forEach(i=>{if(per[i][r])pool.push(per[i][r]);});}
+  pool.missing=missing;
   return pool;
 }
 
@@ -617,7 +700,7 @@ $("startBtn").onclick=async()=>{
   try{
     const pool=await buildPool();
     if(pool.length<3) throw new Error("Zu wenige Songs gefunden. Andere Kategorie oder mehr Künstler probieren.");
-    shuffle(pool);
+    if(pool.missing&&pool.missing.length)showToast("Keine Songs gefunden für: "+pool.missing.join(", "));
     const players= S.mode==="party"? names.map((n,i)=>({name:n,color:TEAM_COLORS[i],pts:0})) : [{name:"Du",color:"var(--accent)",pts:0}];
     G=newGame(pool,players);
     startRound();
@@ -884,7 +967,7 @@ $("lobbyStart").onclick=async()=>{
   const pool=await NET.poolP;
   $("lobbyStart").textContent="Spiel starten";
   if(!Array.isArray(pool)||pool.length<3){alert((pool&&pool.message)||"Zu wenige Songs gefunden.");NET.poolP=buildPool().catch(e=>e);renderLobby();return;}
-  shuffle(pool);
+  if(pool.missing&&pool.missing.length)showToast("Keine Songs gefunden für: "+pool.missing.join(", "));
   G=newGame(pool,NET.players);
   startRound();
 };
