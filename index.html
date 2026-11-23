@@ -301,6 +301,14 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div class="chips" id="chalChips"></div>
   <p class="note" style="margin-top:6px" id="chalNote"></p>
 
+  <h2>Schwierigkeit</h2>
+  <div class="chips" id="levelChips">
+    <button class="chip" data-v="1">1 · Nur Hits</button>
+    <button class="chip on" data-v="2">2 · Bekannt</button>
+    <button class="chip" data-v="3">3 · Auch Nischiges</button>
+  </div>
+  <p class="note" id="levelNote" style="margin-top:6px"></p>
+
   <h2>Interpret</h2>
   <div class="chips" id="artistChips">
     <button class="chip on" data-v="none">Nicht nötig</button>
@@ -318,7 +326,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
   <div id="boardBox" class="hide"><h2>Deine Bestenliste (Solo)</h2><ol class="board" id="boardSetup"></ol></div>
   <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
-  <p class="note" id="verNote">Version 16</p>
+  <p class="note" id="verNote">Version 17</p>
 </section>
 
 <!-- LOADING -->
@@ -362,7 +370,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
     </label>
     <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
     <p class="note" id="bJoinMsg"></p>
-    <p class="note">Version 16</p>
+    <p class="note">Version 17</p>
   </div>
   <div id="bPlay" class="hide">
     <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
@@ -440,7 +448,7 @@ canvas.confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 <script src="lib/mqtt.min.js"></script>
 <script src="lib/qrcode.js"></script>
 <script>
-const VERSION="16";
+const VERSION="17";
 function confetti(color){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const c=document.createElement("canvas");c.className="confetti";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -489,7 +497,7 @@ const TEAM_COLORS = ["var(--t1)","var(--t2)","var(--t3)","var(--t4)"];
 const DEFAULT_TEAMS = ["Team Blau","Team Rot","Team Grün","Team Lila"];
 
 // ---------- Zustand ----------
-const S = {artist:"none",mode:"online",teams:3,cat:"Party",chals:new Set(["classic"]),end:"s10"};
+const S = {level:2,artist:"none",mode:"online",teams:3,cat:"Party",chals:new Set(["classic"]),end:"s10"};
 let G = null;
 
 // ---------- Setup UI ----------
@@ -527,6 +535,10 @@ function newGame(pool,players){
 }
 function goalReached(){return G.goal>0&&G.players.some(p=>p.pts>=G.goal);}
 const ARTIST_NOTES={none:"Nur der Songtitel zählt.",bonus:"Titel zählt, der Interpret gibt Extrapunkte.",required:"Nur Titel und Interpret zusammen zählen."};
+const LEVEL_NOTES={1:"Nur die bekanntesten Songs des Themas oder Künstlers.",2:"Bekannte Songs, ab und zu etwas tiefer im Katalog.",3:"Alles dabei, auch Album-Tracks und Nischiges."};
+try{const l=+localStorage.getItem("eds_level");if(l>=1&&l<=3){S.level=l;[...$("levelChips").children].forEach(c=>c.classList.toggle("on",+c.dataset.v===l));}}catch(e){}
+single("levelChips","level",()=>{$("levelNote").textContent=LEVEL_NOTES[S.level];try{localStorage.setItem("eds_level",S.level);}catch(e){}});
+$("levelNote").textContent=LEVEL_NOTES[S.level];
 single("artistChips","artist",()=>$("artistNote").textContent=ARTIST_NOTES[S.artist]);
 $("artistNote").textContent=ARTIST_NOTES[S.artist];
 function updBoardBox(){$("boardBox").classList.toggle("hide",S.mode!=="solo"||!loadBoard().length);renderBoard("boardSetup");}
@@ -571,7 +583,7 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;
 async function deezerPlaylist(id){
   const url=id==="chart"?"https://api.deezer.com/chart/0/tracks?limit=100&output=jsonp":`https://api.deezer.com/playlist/${id}/tracks?limit=150&output=jsonp`;
   const d=await jsonp(url,10000);
-  return (d.data||[]).filter(t=>t.preview&&t.readable!==false).map(t=>({title:clean(t.title_short||t.title),artist:t.artist.name,preview:t.preview,cover:t.album&&t.album.cover_medium}));
+  return (d.data||[]).filter(t=>t.preview&&t.readable!==false).map(t=>({title:clean(t.title_short||t.title),artist:t.artist.name,preview:t.preview,cover:t.album&&t.album.cover_medium,rank:t.rank||0}));
 }
 // ---------- Profil (lokal; später optional per Login synchronisiert) ----------
 let PROFILE={}; try{PROFILE=JSON.parse(localStorage.getItem("eds_profile")||"{}");}catch(e){}
@@ -686,8 +698,8 @@ async function resolveArtist(name){ // Name -> Deezer-Artist (exakter Treffer be
 }
 async function artistTracks(a){ // nur Songs, bei denen genau dieser Künstler Hauptinterpret ist
   let out=[];
-  try{const d=await jsonp(`https://api.deezer.com/artist/${a.id}/top?limit=50&output=jsonp`,10000);
-    out=(d.data||[]).filter(t=>t.preview&&t.artist&&t.artist.id===a.id).map(t=>({title:clean(t.title_short||t.title),artist:t.artist.name,preview:t.preview,cover:t.album&&t.album.cover_medium}));}catch(e){}
+  try{const d=await jsonp(`https://api.deezer.com/artist/${a.id}/top?limit=${S.level===3?100:50}&output=jsonp`,10000);
+    out=(d.data||[]).filter(t=>t.preview&&t.artist&&t.artist.id===a.id).map(t=>({title:clean(t.title_short||t.title),artist:t.artist.name,preview:t.preview,cover:t.album&&t.album.cover_medium,rank:t.rank||0}));}catch(e){}
   if(out.length<12){ // Ergänzen über iTunes, aber nur exakt passender Künstlername
     try{const r=await itunes(a.name); out=out.concat(r.filter(t=>t.artist.trim().toLowerCase()===a.name.trim().toLowerCase()));}catch(e){}
   }
@@ -704,7 +716,10 @@ async function buildPool(){
     const block=BLOCK[S.cat];
     lists.flat().forEach(t=>{const k=norm(t.title);if(block&&block.test(t.title+" "+t.artist))return;if(k&&!seen.has(k)){seen.add(k);pool.push(t);}});
     if(!pool.length) throw new Error("Die Playlist konnte nicht geladen werden. Internet prüfen oder andere Kategorie wählen.");
-    return shuffle(pool);
+    // Schwierigkeit: nach Deezer-Beliebtheit (rank) sortieren und nur die bekanntesten nehmen
+    pool.sort((a,b)=>(b.rank||0)-(a.rank||0));
+    const keep=S.level===1?Math.max(15,Math.round(pool.length*.35)):S.level===2?Math.max(25,Math.round(pool.length*.7)):pool.length;
+    return shuffle(pool.slice(0,keep));
   }
   let artists;
   if(S.cat==="Eigene Künstler"){
@@ -717,9 +732,12 @@ async function buildPool(){
   const missing=artists.filter((a,i)=>!lists[i]||!lists[i].length).map(a=>a.missing||a.name);
   // Pro Künstler mischen (Top 20), dann reihum verteilen, damit alle gleich oft drankommen
   const seen=new Set();
-  const per=lists.map(l=>shuffle((l||[]).filter(t=>{const k=norm(t.artist)+"|"+norm(t.title);if(!norm(t.title)||seen.has(k))return false;seen.add(k);return true;}).slice(0,20)));
+  // Schwierigkeit: pro Künstler die beliebtesten 8 / 20 / 50 Songs
+  const N=S.level===1?8:S.level===2?20:50;
+  const per=lists.map(l=>shuffle((l||[]).filter(t=>{const k=norm(t.artist)+"|"+norm(t.title);if(!norm(t.title)||seen.has(k))return false;seen.add(k);return true;})
+    .map((t,i)=>({t,i})).sort((a,b)=>((b.t.rank||0)-(a.t.rank||0))||(a.i-b.i)).map(x=>x.t).slice(0,N)));
   const order=shuffle(per.map((_,i)=>i)); const pool=[];
-  for(let r=0;r<20;r++){shuffle(order).forEach(i=>{if(per[i][r])pool.push(per[i][r]);});}
+  for(let r=0;r<N;r++){shuffle(order).forEach(i=>{if(per[i][r])pool.push(per[i][r]);});}
   pool.missing=missing;
   return pool;
 }
