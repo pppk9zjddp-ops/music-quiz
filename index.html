@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14111f">
+<title>Ohrwurm</title>
+<style>
+:root{
+  --bg:#14111f;--panel:#1f1a30;--panel2:#2a2342;--text:#f4f1ff;--muted:#a79fc4;
+  --accent:#ffcc33;--accent2:#ff4d8d;--ok:#3ddc97;--bad:#ff5c5c;
+  --t1:#4dabff;--t2:#ff6b6b;--t3:#3ddc97;--t4:#c77dff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{min-height:100dvh}
+.wrap{max-width:560px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:2.4rem;margin:8px 0 0;letter-spacing:-1px}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:4px 0 20px}
+h2{font-size:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:22px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--panel2);background:var(--panel);color:var(--text);padding:9px 14px;border-radius:999px;font-size:.95rem;cursor:pointer}
+.chip.on{border-color:var(--accent);background:#3a3010}
+input[type=text]{width:100%;background:var(--panel);border:2px solid var(--panel2);color:var(--text);padding:11px 12px;border-radius:12px;font-size:1rem}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+.teams{display:grid;gap:8px}
+.btn{display:block;width:100%;border:0;border-radius:16px;padding:16px;font-size:1.1rem;font-weight:700;cursor:pointer;background:var(--accent);color:#1b1500}
+.btn.sec{background:var(--panel2);color:var(--text)}
+.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.hide{display:none!important}
+.top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.9rem}
+.badge{display:inline-block;background:var(--accent2);color:#fff;font-weight:800;padding:6px 12px;border-radius:999px;font-size:.9rem}
+.challenge{text-align:center;margin:18px 0 6px}
+.challenge .desc{color:var(--muted);font-size:.9rem;margin-top:6px}
+.play{width:170px;height:170px;border-radius:50%;margin:18px auto 8px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;background:radial-gradient(circle at 30% 30%,#ffe27a,var(--accent));color:#1b1500;border:0;font-size:1rem;font-weight:800;cursor:pointer;box-shadow:0 10px 40px #ffcc3333}
+.play svg{width:54px;height:54px}
+.play.playing{animation:pulse 0.8s infinite alternate}
+@keyframes pulse{to{transform:scale(1.05);box-shadow:0 10px 60px #ffcc3366}}
+.timer{text-align:center;color:var(--muted);font-variant-numeric:tabular-nums;margin-bottom:10px}
+.buzzers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.buzz{border:0;border-radius:18px;padding:26px 8px;font-size:1.15rem;font-weight:800;color:#fff;cursor:pointer}
+.buzz small{display:block;font-weight:500;opacity:.85;margin-top:4px}
+.buzz.locked{opacity:.25;cursor:default}
+.panel{background:var(--panel);border-radius:18px;padding:16px;margin-top:14px}
+.mod{border:2px dashed var(--panel2);border-radius:14px;padding:10px 12px;margin-top:12px;color:var(--muted);font-size:.9rem;cursor:pointer;text-align:center}
+.mod b{color:var(--text)}
+.reveal{display:flex;gap:14px;align-items:center}
+.reveal img{width:96px;height:96px;border-radius:12px;object-fit:cover;background:var(--panel2)}
+.reveal .t{font-size:1.2rem;font-weight:800}.reveal .a{color:var(--muted)}
+.score{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.score div{background:var(--panel);border-radius:12px;padding:6px 12px;font-weight:700;border-left:5px solid}
+.big{font-size:1.3rem;text-align:center;font-weight:800;margin:6px 0 12px}
+.feedback{text-align:center;min-height:1.4em;margin-top:8px;font-weight:700}
+.feedback.bad{color:var(--bad)}.feedback.ok{color:var(--ok)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.final li{display:flex;justify-content:space-between;background:var(--panel);margin:8px 0;padding:14px;border-radius:14px;font-size:1.1rem;font-weight:700}
+.final{list-style:none;padding:0}
+.note{color:var(--muted);font-size:.85rem;margin-top:10px}
+.spinner{width:42px;height:42px;border:4px solid var(--panel2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:60px auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.qr{background:#fff;border-radius:16px;padding:10px;width:min(240px,70vw);margin:10px auto}
+.qr svg{display:block;width:100%;height:auto}
+.code{font-size:2.6rem;font-weight:900;letter-spacing:8px;text-align:center;color:var(--accent);font-variant-numeric:tabular-nums}
+.link{text-align:center;color:var(--muted);font-size:.85rem;word-break:break-all}
+.lteams{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:40px;margin:12px 0}
+.lteams div{padding:8px 14px;border-radius:999px;font-weight:800;color:#fff}
+.bbtn{display:block;width:min(78vw,340px);aspect-ratio:1;border-radius:50%;margin:34px auto 20px;border:0;color:#fff;font-size:2.6rem;font-weight:900;letter-spacing:2px;cursor:pointer;box-shadow:inset 0 -12px 0 rgba(0,0,0,.25),0 14px 50px rgba(0,0,0,.5);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.bbtn:active:not(:disabled){transform:scale(.95)}
+.bbtn:disabled{filter:grayscale(.85) brightness(.55);cursor:default}
+.bmsg{text-align:center;font-size:1.3rem;font-weight:800;min-height:3em}
+.off{opacity:.45}
+@media (prefers-reduced-motion:reduce){.play.playing,.spinner,.shake{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- SETUP -->
+<section id="setup">
+  <h1>Ohr<span>wurm</span></h1>
+  <p class="sub">Der Song läuft. Wer ihn erkennt, buzzert.</p>
+
+  <h2>Spielmodus</h2>
+  <div class="chips" id="modeChips">
+    <button class="chip on" data-v="online">Party: Handys als Buzzer</button>
+    <button class="chip" data-v="party">Party: ein Gerät</button>
+    <button class="chip" data-v="solo">Solo (Antwort eintippen)</button>
+  </div>
+
+  <div id="teamBox" class="hide">
+    <h2>Teams</h2>
+    <div class="chips" id="teamCount">
+      <button class="chip" data-v="2">2</button><button class="chip on" data-v="3">3</button><button class="chip" data-v="4">4</button>
+    </div>
+    <div class="teams" id="teamNames" style="margin-top:10px"></div>
+  </div>
+
+  <h2>Musik</h2>
+  <div class="chips" id="catChips"></div>
+  <input type="text" id="customArtists" class="hide" placeholder="Künstler, mit Komma getrennt" style="margin-top:10px">
+
+  <h2>Challenges</h2>
+  <div class="chips" id="chalChips"></div>
+  <p class="note" style="margin-top:6px">Pro Song wird zufällig eine der gewählten Varianten gespielt.</p>
+
+  <h2>Runden</h2>
+  <div class="chips" id="roundChips">
+    <button class="chip" data-v="5">5</button><button class="chip on" data-v="10">10</button><button class="chip" data-v="20">20</button>
+  </div>
+
+  <div style="margin-top:26px"><button class="btn" id="startBtn">Spiel starten</button></div>
+  <p class="note">Musik: offizielle 30-Sekunden-Vorschauen (iTunes, Deezer als Ersatz). Sie laufen in Schleife, bis jemand buzzert. Ton anmachen!</p>
+</section>
+
+<!-- LOADING -->
+<section id="loading" class="hide" style="text-align:center">
+  <div class="spinner"></div>
+  <div id="loadMsg">Songs werden gesucht…</div>
+</section>
+
+<!-- LOBBY (Moderator) -->
+<section id="lobby" class="hide">
+  <h1>Ohr<span>wurm</span></h1>
+  <p class="sub">Teams scannen den Code mit dem Handy und geben ihren Teamnamen ein.</p>
+  <div class="qr" id="qr"></div>
+  <div class="code" id="lobbyCode">····</div>
+  <div class="link" id="lobbyLink"></div>
+  <div class="note" style="text-align:center" id="lobbyStatus"></div>
+  <h2 style="text-align:center">Teams im Raum</h2>
+  <div class="lteams" id="lobbyTeams"></div>
+  <button class="btn" id="lobbyStart" disabled>Spiel starten</button>
+  <div style="margin-top:8px"><button class="btn sec" id="lobbyBack">Zurück</button></div>
+</section>
+
+<!-- BUZZER (Team-Handy) -->
+<section id="buzzer" class="hide">
+  <div id="bJoin">
+    <h1>Ohr<span>wurm</span></h1>
+    <p class="sub">Raum <b id="bCode"></b></p>
+    <h2>Teamname</h2>
+    <input type="text" id="bName" maxlength="20" placeholder="z.B. Die Ohrwürmer">
+    <div style="margin-top:14px"><button class="btn" id="bJoinBtn">Beitreten</button></div>
+    <p class="note" id="bJoinMsg"></p>
+  </div>
+  <div id="bPlay" class="hide">
+    <div class="top"><b id="bTeam" style="font-size:1.2rem"></b><span id="bPts"></span></div>
+    <button class="bbtn" id="bBtn" disabled>BUZZ</button>
+    <div class="bmsg" id="bMsg"></div>
+    <div class="score" id="bScores"></div>
+  </div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="hide">
+  <div class="top"><span><span id="roundInfo"></span> <span id="roomInfo"></span></span><button class="chip" id="quitBtn" style="padding:5px 12px">Beenden</button></div>
+  <div class="challenge"><span class="badge" id="chalName"></span><div class="desc" id="chalDesc"></div></div>
+  <button class="play" id="playBtn"><svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span id="playLabel">Abspielen</span></button>
+  <div class="timer" id="timer">0:00</div>
+
+  <!-- Party -->
+  <div id="partyArea">
+    <div class="buzzers" id="buzzers"></div>
+    <div class="panel hide" id="judgePanel">
+      <div class="big" id="judgeTitle"></div>
+      <div class="row"><button class="btn" style="background:var(--ok)" id="rightBtn">Richtig</button><button class="btn" style="background:var(--bad);color:#fff" id="wrongBtn">Falsch</button></div>
+    </div>
+    <div class="mod" id="modBox">Moderator: tippen, um die Lösung zu sehen</div>
+    <div style="margin-top:10px"><button class="btn sec" id="revealBtn">Keiner weiß es, auflösen</button></div>
+  </div>
+
+  <!-- Solo -->
+  <div id="soloArea" class="hide">
+    <form id="guessForm" class="row" style="margin-top:14px" autocomplete="off">
+      <input type="text" id="guessInput" placeholder="Songtitel eintippen" style="flex:3">
+      <button class="btn" type="submit" style="flex:1">Raten</button>
+    </form>
+    <div class="feedback" id="feedback"></div>
+    <div style="margin-top:8px"><button class="btn sec" id="skipBtn">Aufgeben, auflösen</button></div>
+  </div>
+
+  <div class="panel hide" id="revealPanel">
+    <div class="big" id="revealMsg"></div>
+    <div class="reveal"><img id="cover" alt=""><div><div class="t" id="rTitle"></div><div class="a" id="rArtist"></div></div></div>
+    <div style="margin-top:14px"><button class="btn" id="nextBtn">Nächster Song</button></div>
+  </div>
+
+  <div class="score" id="scoreBar"></div>
+</section>
+
+<!-- END -->
+<section id="end" class="hide">
+  <h1>Ende<span>!</span></h1>
+  <p class="sub" id="winner"></p>
+  <ul class="final" id="finalList"></ul>
+  <button class="btn" id="againBtn">Nochmal</button>
+</section>
+
+</div>
+<script src="lib/peerjs.min.js"></script>
+<script src="lib/qrcode.js"></script>
+<script>
+// ---------- Daten ----------
+const CATS = {
+  "Charts heute":["Dua Lipa","The Weeknd","Ed Sheeran","Taylor Swift","Harry Styles","Billie Eilish","Olivia Rodrigo","Miley Cyrus","Sabrina Carpenter","Bruno Mars","Shirin David","Apache 207"],
+  "2010er":["Avicii","Rihanna","Adele","Katy Perry","Lady Gaga","Pharrell Williams","Maroon 5","Robin Schulz","Imagine Dragons","Calvin Harris","Lukas Graham","Mark Forster"],
+  "2000er":["Britney Spears","Eminem","Beyoncé","Shakira","Nelly Furtado","Black Eyed Peas","Linkin Park","Coldplay","Juli","Silbermond","Justin Timberlake","Outkast"],
+  "90er":["Backstreet Boys","Spice Girls","Nirvana","Oasis","Haddaway","Dr. Alban","Mariah Carey","TLC","Whitney Houston","Scooter","Vengaboys","Die Fantastischen Vier"],
+  "80er":["Michael Jackson","Madonna","a-ha","Queen","Cyndi Lauper","Nena","Falco","Depeche Mode","Bon Jovi","Toto","Modern Talking","Eurythmics"],
+  "Deutsch":["Herbert Grönemeyer","Peter Fox","Mark Forster","Helene Fischer","Die Ärzte","Die Toten Hosen","Clueso","Tim Bendzko","Kraftklub","AnnenMayKantereit","Seeed","Udo Lindenberg"],
+  "Eigene Künstler":[]
+};
+const CHALLENGES = {
+  classic:{name:"Klassisch",desc:"Ganz normal.",buf:false},
+  reverse:{name:"Rückwärts",desc:"Der Song läuft rückwärts.",buf:true},
+  water:{name:"Unter Wasser",desc:"Dumpf wie durch eine Wand.",buf:true},
+  turbo:{name:"Turbo",desc:"Doppelt so schnell.",buf:false},
+  slow:{name:"Zeitlupe",desc:"Halbe Geschwindigkeit, tiefer.",buf:false}
+};
+const TEAM_COLORS = ["var(--t1)","var(--t2)","var(--t3)","var(--t4)"];
+const DEFAULT_TEAMS = ["Team Blau","Team Rot","Team Grün","Team Lila"];
+
+// ---------- Zustand ----------
+const S = {mode:"online",teams:3,cat:"Charts heute",chals:new Set(["classic"]),rounds:10};
+let G = null;
+
+// ---------- Setup UI ----------
+const $ = id=>document.getElementById(id);
+function single(id,key,cb){
+  $(id).addEventListener("click",e=>{
+    const b=e.target.closest(".chip"); if(!b) return;
+    [...$(id).children].forEach(c=>c.classList.toggle("on",c===b));
+    S[key]=isNaN(+b.dataset.v)?b.dataset.v:+b.dataset.v; cb&&cb();
+  });
+}
+function renderTeams(){
+  const box=$("teamNames"); const old=[...box.querySelectorAll("input")].map(i=>i.value);
+  box.innerHTML="";
+  for(let i=0;i<S.teams;i++){const inp=document.createElement("input");inp.type="text";inp.id="team"+i;inp.value=old[i]||DEFAULT_TEAMS[i];inp.style.borderLeft="6px solid "+TEAM_COLORS[i];box.appendChild(inp);}
+}
+Object.keys(CATS).forEach(c=>{const b=document.createElement("button");b.className="chip"+(c===S.cat?" on":"");b.dataset.v=c;b.textContent=c;$("catChips").appendChild(b);});
+Object.entries(CHALLENGES).forEach(([k,v])=>{const b=document.createElement("button");b.className="chip"+(S.chals.has(k)?" on":"");b.dataset.v=k;b.textContent=v.name;$("chalChips").appendChild(b);});
+single("modeChips","mode",()=>$("teamBox").classList.toggle("hide",S.mode!=="party"));
+const isParty=()=>S.mode!=="solo";
+single("teamCount","teams",renderTeams);
+single("catChips","cat",()=>$("customArtists").classList.toggle("hide",S.cat!=="Eigene Künstler"));
+single("roundChips","rounds");
+$("chalChips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;const k=b.dataset.v;
+  if(S.chals.has(k)){if(S.chals.size>1)S.chals.delete(k);}else S.chals.add(k);
+  b.classList.toggle("on",S.chals.has(k));});
+renderTeams();
+
+// ---------- Musikquellen (JSONP, kein Server nötig) ----------
+let jsonpN=0;
+function jsonp(url,timeout=8000){
+  return new Promise((res,rej)=>{
+    const cb="__cb"+(jsonpN++); const s=document.createElement("script");
+    const t=setTimeout(()=>{cleanup();rej(new Error("timeout"));},timeout);
+    function cleanup(){clearTimeout(t);delete window[cb];s.remove();}
+    window[cb]=d=>{cleanup();res(d);};
+    s.onerror=()=>{cleanup();rej(new Error("load"));};
+    s.src=url+(url.includes("?")?"&":"?")+"callback="+cb; document.head.appendChild(s);
+  });
+}
+function clean(t){return t.replace(/\s*[\(\[][^\)\]]*(remaster|version|edit|mix|live|feat|mono|stereo)[^\)\]]*[\)\]]/gi,"").replace(/\s+-\s+.*(remaster|version|edit|mix|live|mono|stereo).*$/i,"").trim();}
+async function itunes(artist){
+  const d=await jsonp(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&media=music&entity=song&attribute=artistTerm&limit=25&country=DE`);
+  return d.results.filter(r=>r.previewUrl&&r.artistName.toLowerCase().includes(artist.toLowerCase().split(" ")[0]))
+    .map(r=>({title:clean(r.trackName),artist:r.artistName,preview:r.previewUrl,cover:(r.artworkUrl100||"").replace("100x100","300x300")}));
+}
+async function deezer(artist){
+  const d=await jsonp(`https://api.deezer.com/search?q=${encodeURIComponent('artist:"'+artist+'"')}&limit=25&output=jsonp`);
+  return (d.data||[]).filter(r=>r.preview).map(r=>({title:clean(r.title),artist:r.artist.name,preview:r.preview,cover:r.album.cover_medium}));
+}
+async function fetchArtist(a){
+  try{const r=await itunes(a); if(r.length) return r;}catch(e){}
+  try{return await deezer(a);}catch(e){return [];}
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+async function buildPool(){
+  let artists=CATS[S.cat];
+  if(S.cat==="Eigene Künstler") artists=$("customArtists").value.split(",").map(s=>s.trim()).filter(Boolean);
+  if(!artists.length) throw new Error("Bitte mindestens einen Künstler eintragen.");
+  const results=await Promise.all(artists.map(fetchArtist));
+  const seen=new Set(); const pool=[];
+  results.forEach(list=>list.slice(0,8).forEach(t=>{const k=norm(t.title);if(k&&!seen.has(k)){seen.add(k);pool.push(t);}}));
+  return pool;
+}
+
+// ---------- Antwort prüfen (tolerant bei Tippfehlern) ----------
+function norm(s){
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ß/g,"ss")
+    .replace(/\(.*?\)|\[.*?\]/g," ").replace(/&/g," and ").replace(/[^a-z0-9 ]/g," ").replace(/\b(the|feat|ft)\b/g," ").replace(/\s+/g," ").trim();
+}
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=[...Array(n+1).keys()];
+  for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
+function isClose(guess,target){
+  if(!guess||!target) return false;
+  if(guess===target) return true;
+  const tol = target.length<=4?0: target.length<=8?1: Math.floor(target.length*0.2);
+  if(lev(guess,target)<=tol) return true;
+  // Titel steckt in der Eingabe (z.B. "bohemian rhapsody queen")
+  if(target.length>=4 && guess.includes(target)) return true;
+  return false;
+}
+function checkGuess(raw,track){
+  const g=norm(raw); const full=norm(track.title); const short=norm(track.title.replace(/\(.*?\)/g,""));
+  return isClose(g,full)||isClose(g,short);
+}
+
+// ---------- Audio: läuft in Schleife bis Pause ----------
+let ctx=null; const audioEl=new Audio(); audioEl.preload="auto"; audioEl.loop=true;
+const A={node:null,startedAt:0,pos:0,playing:false,tick:null,elapsed:0,lastTick:0};
+function getCtx(){if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==="suspended")ctx.resume();return ctx;}
+async function loadBuffer(url){
+  const r=await fetch(url,{mode:"cors"}); if(!r.ok) throw new Error("http");
+  return await getCtx().decodeAudioData(await r.arrayBuffer());
+}
+function reversed(buf){
+  const out=getCtx().createBuffer(buf.numberOfChannels,buf.length,buf.sampleRate);
+  for(let ch=0;ch<buf.numberOfChannels;ch++) out.getChannelData(ch).set(buf.getChannelData(ch).slice().reverse());
+  return out;
+}
+function rateFor(ch){return ch==="turbo"?2: ch==="slow"?0.5:1;}
+function play(original){
+  if(A.playing) return;
+  const r=G.cur; const ch=original?"classic":r.chal; const rate=rateFor(ch);
+  if(r.buffer && !original && (ch==="reverse"||ch==="water")){
+    const c=getCtx(); const n=c.createBufferSource();
+    n.buffer= ch==="reverse"? r.rev : r.buffer; n.loop=true;
+    let last=n;
+    if(ch==="water"){const f=c.createBiquadFilter();f.type="lowpass";f.frequency.value=420;f.Q.value=6;n.connect(f);last=f;}
+    last.connect(c.destination);
+    n.start(0, A.pos % n.buffer.duration); A.node=n; A.startedAt=c.currentTime;
+  }else{
+    if(audioEl.src!==r.track.preview){audioEl.src=r.track.preview; audioEl.currentTime=0;}
+    audioEl.preservesPitch=audioEl.mozPreservesPitch=audioEl.webkitPreservesPitch=false;
+    audioEl.playbackRate=rate; audioEl.play().catch(()=>{});
+  }
+  A.playing=true; A.lastTick=performance.now();
+  A.tick=setInterval(()=>{const now=performance.now();A.elapsed+=(now-A.lastTick)/1000;A.lastTick=now;renderTimer();},250);
+  setPlayUI();
+}
+function pause(){
+  if(!A.playing) return;
+  if(A.node){A.pos+=getCtx().currentTime-A.startedAt; try{A.node.stop();}catch(e){} A.node=null;}
+  audioEl.pause();
+  clearInterval(A.tick); A.playing=false; setPlayUI();
+}
+function resetAudio(){pause(); A.pos=0; A.elapsed=0; audioEl.removeAttribute("src"); audioEl.load(); renderTimer();}
+function renderTimer(){const s=Math.floor(A.elapsed);$("timer").textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;}
+function setPlayUI(){
+  $("playBtn").classList.toggle("playing",A.playing);
+  $("playIcon").innerHTML=A.playing?'<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>':'<path d="M8 5v14l11-7z"/>';
+  $("playLabel").textContent=A.playing?"Pause":(A.elapsed>0?"Weiter":"Abspielen");
+}
+
+// ---------- Spiel ----------
+function show(id){["setup","loading","lobby","buzzer","game","end"].forEach(s=>$(s).classList.toggle("hide",s!==id));}
+
+$("startBtn").onclick=async()=>{
+  getCtx(); audioEl.play().catch(()=>{}); audioEl.pause(); // Audio auf iOS per Tap freischalten
+  if(S.mode==="online"){ if(!window.Peer){alert("Online-Modus konnte nicht geladen werden (lib/peerjs.min.js fehlt).");return;} show("lobby"); startHost(); return; }
+  const names=[...$("teamNames").querySelectorAll("input")].map((i,k)=>i.value.trim()||DEFAULT_TEAMS[k]);
+  show("loading");
+  try{
+    const pool=await buildPool();
+    if(pool.length<3) throw new Error("Zu wenige Songs gefunden. Andere Kategorie oder mehr Künstler probieren.");
+    shuffle(pool);
+    const players= S.mode==="party"? names.map((n,i)=>({name:n,color:TEAM_COLORS[i],pts:0})) : [{name:"Du",color:"var(--accent)",pts:0}];
+    G={pool,players,round:0,total:Math.min(S.rounds,pool.length),chals:[...S.chals]};
+    startRound();
+  }catch(e){alert(e.message||"Fehler beim Laden der Songs.");show("setup");}
+};
+
+async function startRound(){
+  resetAudio();
+  const track=G.pool[G.round];
+  const chal=G.chals[Math.random()*G.chals.length|0];
+  G.cur={track,chal,locked:new Set(),buzzed:null,done:false,buffer:null};
+  show("game");
+  $("roundInfo").textContent=`Song ${G.round+1} von ${G.total}`;
+  ["revealPanel","judgePanel"].forEach(id=>$(id).classList.add("hide"));
+  $("modBox").innerHTML="Moderator: tippen, um die Lösung zu sehen";
+  $("playBtn").disabled=true; $("playLabel").textContent="lädt…";
+  if(CHALLENGES[chal].buf){
+    try{const b=await loadBuffer(track.preview); G.cur.buffer=b; if(chal==="reverse")G.cur.rev=reversed(b);}
+    catch(e){G.cur.chal="classic";} // Fallback, falls die Datei nicht geladen werden kann
+  }
+  const c=CHALLENGES[G.cur.chal];
+  $("chalName").textContent=c.name; $("chalDesc").textContent=c.desc;
+  $("playBtn").disabled=false; setPlayUI(); renderScore();
+  const party=isParty();
+  $("partyArea").classList.toggle("hide",!party); $("soloArea").classList.toggle("hide",party);
+  if(party){renderBuzzers();$("revealBtn").classList.remove("hide");$("modBox").classList.remove("hide");}
+  else{$("guessInput").value="";$("feedback").textContent="";$("guessInput").disabled=false;}
+  $("roomInfo").textContent=S.mode==="online"?"· Raum "+NET.code:"";
+  broadcast();
+  play();
+  if(!party) $("guessInput").focus();
+}
+$("playBtn").onclick=()=>{A.playing?pause():play(G.cur.done);};
+
+// Party
+function renderBuzzers(){
+  $("buzzers").innerHTML="";
+  G.players.forEach((p,i)=>{
+    const b=document.createElement("button");b.className="buzz"+(G.cur.locked.has(i)?" locked":"");b.style.background=p.color;
+    const off=S.mode==="online"&&!isOnline(p);
+    if(off) b.classList.add("off");
+    b.innerHTML=`${p.name}<small>${S.mode==="online"?(off?"getrennt":"Handy verbunden"):"Taste "+(i+1)}</small>`;b.onclick=()=>buzz(i);$("buzzers").appendChild(b);
+  });
+}
+function buzz(i){
+  if(G.cur.done||G.cur.locked.has(i)||G.cur.buzzed!=null)return;
+  pause(); G.cur.buzzed=i; beep();
+  $("judgeTitle").innerHTML=`<span style="color:${G.players[i].color}">${G.players[i].name}</span> sagt die Antwort!`;
+  $("judgePanel").classList.remove("hide"); $("revealBtn").classList.add("hide");
+  broadcast();
+}
+$("modBox").onclick=()=>{if(G.cur.done)return;const t=G.cur.track;$("modBox").innerHTML=`Lösung: <b>${t.title}</b> von <b>${t.artist}</b>`;};
+$("rightBtn").onclick=()=>{const i=G.cur.buzzed;G.players[i].pts++;G.cur.buzzed=null;reveal(`${G.players[i].name} hat es! +1 Punkt`);};
+$("wrongBtn").onclick=()=>{const i=G.cur.buzzed;G.cur.locked.add(i);G.cur.buzzed=null;$("judgePanel").classList.add("hide");
+  if(G.cur.locked.size>=G.players.length){reveal("Keiner hatte es!");return;}
+  $("revealBtn").classList.remove("hide");renderBuzzers();play();broadcast();};
+$("revealBtn").onclick=()=>reveal("Aufgelöst");
+document.addEventListener("keydown",e=>{
+  if(!G||$("game").classList.contains("hide")||e.target.tagName==="INPUT")return;
+  const n=+e.key; if(S.mode==="party"&&n>=1&&n<=G.players.length)buzz(n-1);
+  if(e.key===" "){e.preventDefault();$("playBtn").click();}
+});
+
+// Solo
+$("guessForm").addEventListener("submit",e=>{
+  e.preventDefault(); if(G.cur.done) return;
+  const v=$("guessInput").value.trim(); if(!v) return;
+  if(checkGuess(v,G.cur.track)){G.players[0].pts++;reveal("Richtig! +1 Punkt");}
+  else{const f=$("feedback");f.textContent=`„${v}“ ist es nicht. Weiter hören!`;f.className="feedback bad";
+    $("guessInput").classList.remove("shake");void $("guessInput").offsetWidth;$("guessInput").classList.add("shake");$("guessInput").select();}
+});
+$("skipBtn").onclick=()=>reveal("Aufgelöst");
+
+function reveal(msg){
+  G.cur.done=true; pause();
+  ["judgePanel","revealBtn","modBox"].forEach(id=>$(id).classList.add("hide"));
+  $("guessInput").disabled=true; $("feedback").textContent="";
+  const t=G.cur.track; $("revealMsg").textContent=msg; $("rTitle").textContent=t.title; $("rArtist").textContent=t.artist; $("cover").src=t.cover;
+  $("revealPanel").classList.remove("hide");
+  $("nextBtn").textContent=G.round+1>=G.total?"Zum Ergebnis":"Nächster Song";
+  G.cur.result={msg,title:t.title,artist:t.artist};
+  renderScore(); if(isParty()) renderBuzzers();
+  broadcast();
+  // Original zur Auflösung abspielen
+  A.pos=0; audioEl.src=t.preview; audioEl.currentTime=0; play(true);
+}
+$("nextBtn").onclick=()=>{G.round++; if(G.round>=G.total)finish(); else startRound();};
+$("quitBtn").onclick=()=>finish();
+
+function renderScore(){$("scoreBar").innerHTML=G.players.map(p=>`<div style="border-color:${p.color}">${p.name}: ${p.pts}</div>`).join("");}
+function finish(){
+  resetAudio(); show("end"); G.ended=true; broadcast();
+  const ranked=[...G.players].sort((a,b)=>b.pts-a.pts);
+  $("winner").textContent=isParty()?(ranked[0].pts===ranked[1]?.pts?"Unentschieden!":`${ranked[0].name} gewinnt!`):`${ranked[0].pts} von ${G.round+(G.cur&&G.cur.done?1:0)} Songs erkannt.`;
+  $("finalList").innerHTML=ranked.map((p,i)=>`<li style="border-left:6px solid ${p.color}"><span>${i+1}. ${p.name}</span><span>${p.pts}</span></li>`).join("");
+}
+$("againBtn").onclick=()=>{
+  if(S.mode==="online"&&NET.peer&&!NET.peer.destroyed){NET.players.forEach(p=>p.pts=0);G=null;NET.poolP=buildPool().catch(e=>e);show("lobby");renderLobby();broadcast();return;}
+  show("setup");
+};
+
+// ---------- Online: Moderator ist Gastgeber, Handys verbinden sich direkt (WebRTC via PeerJS) ----------
+const COLORS8=[...TEAM_COLORS,"#ff9f43","#00b8c4","#f368e0","#8395a7"];
+const NET={peer:null,code:null,conns:new Map(),players:[],poolP:null};
+const PREFIX="ohrwurm-quiz-";
+const PEER_OPTS=window.OW_PEER_OPTS||{debug:0};
+function roomCode(){const a="ABCDEFGHJKLMNPQRSTUVWXYZ";return Array.from({length:4},()=>a[Math.random()*a.length|0]).join("");}
+function joinUrl(code){return location.origin+location.pathname+"?r="+code;}
+function isOnline(p){const c=NET.conns.get(p.cid);return !!(c&&c.open);}
+function beep(){try{const c=getCtx(),o=c.createOscillator(),g=c.createGain();o.type="square";o.frequency.value=880;g.gain.setValueAtTime(.15,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.25);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+.25);}catch(e){}}
+function startHost(){
+  if(NET.peer&&!NET.peer.destroyed){renderLobby();return;}
+  NET.code=roomCode(); NET.players=[]; NET.conns=new Map();
+  $("lobbyCode").textContent=NET.code; $("lobbyStatus").textContent="Raum wird geöffnet…"; $("qr").innerHTML=""; $("lobbyLink").textContent="";
+  const peer=new Peer(PREFIX+NET.code.toLowerCase(),PEER_OPTS); NET.peer=peer;
+  peer.on("open",()=>{
+    $("lobbyStatus").textContent="Bereit. Teams können beitreten.";
+    const url=joinUrl(NET.code); $("lobbyLink").textContent=url;
+    if(window.qrcode){const q=qrcode(0,"M");q.addData(url);q.make();$("qr").innerHTML=q.createSvgTag({cellSize:6,margin:2,scalable:true});}
+    if(location.protocol==="file:") $("lobbyStatus").textContent="Hinweis: Die Datei ist lokal geöffnet. Handys brauchen die Online-Adresse der App.";
+  });
+  peer.on("error",e=>{
+    if(e.type==="unavailable-id"){peer.destroy();NET.peer=null;startHost();return;}
+    if(e.type==="peer-unavailable")return;
+    $("lobbyStatus").textContent="Verbindungsproblem ("+e.type+"). Internet prüfen.";
+  });
+  peer.on("disconnected",()=>setTimeout(()=>{try{if(!peer.destroyed)peer.reconnect();}catch(e){}},2000));
+  peer.on("connection",conn=>{
+    conn.on("data",d=>onClientMsg(conn,d));
+    conn.on("close",()=>{if(conn.cid&&NET.conns.get(conn.cid)===conn)NET.conns.delete(conn.cid);renderLobby();if(G&&G.cur&&!$("game").classList.contains("hide"))renderBuzzers();});
+  });
+  NET.poolP=buildPool().catch(e=>e); // Songs schon in der Lobby laden
+  renderLobby();
+}
+function onClientMsg(conn,d){
+  if(!d||typeof d!=="object")return;
+  if(d.t==="join"){
+    const name=String(d.name||"").trim().slice(0,20)||"Team";
+    const cid=String(d.cid||"").slice(0,20);
+    let i=NET.players.findIndex(p=>p.cid===cid);
+    if(i<0){
+      if(NET.players.length>=8){conn.send({t:"full"});return;}
+      NET.players.push({name,color:COLORS8[NET.players.length],pts:0,cid}); i=NET.players.length-1;
+    }else NET.players[i].name=name;
+    conn.cid=cid; NET.conns.set(cid,conn);
+    renderLobby(); if(G&&G.cur){renderBuzzers();renderScore();}
+    broadcast(); return;
+  }
+  if(d.t==="buzz"&&G&&G.cur){const i=NET.players.findIndex(p=>p.cid===conn.cid); if(i>=0)buzz(i);}
+}
+function phase(){
+  if(!G) return "lobby"; if(G.ended) return "end"; if(!G.cur) return "lobby";
+  if(G.cur.done) return "reveal"; if(G.cur.buzzed!=null) return "buzzed"; return "playing";
+}
+function stateFor(i){
+  const p=NET.players[i], c=G&&G.cur, b=c&&c.buzzed!=null?NET.players[c.buzzed]:null;
+  return {t:"state",phase:phase(),name:p.name,color:p.color,pts:p.pts,locked:!!(c&&c.locked.has(i)),
+    buzzed:b?{name:b.name,me:c.buzzed===i}:null,last:c&&c.done?c.result:null,
+    round:G?G.round+1:0,total:G?G.total:0,scores:NET.players.map(x=>({name:x.name,pts:x.pts,color:x.color}))};
+}
+function broadcast(){
+  if(S.mode!=="online")return;
+  NET.players.forEach((p,i)=>{const c=NET.conns.get(p.cid);if(c&&c.open)try{c.send(stateFor(i));}catch(e){}});
+}
+function renderLobby(){
+  $("lobbyTeams").innerHTML=NET.players.length?NET.players.map(p=>`<div class="${isOnline(p)?"":"off"}" style="background:${p.color}">${esc(p.name)}</div>`).join(""):'<span class="note">Noch keine Teams</span>';
+  $("lobbyStart").disabled=!NET.players.length; $("lobbyStart").textContent="Spiel starten";
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+$("lobbyStart").onclick=async()=>{
+  getCtx(); audioEl.play().catch(()=>{}); audioEl.pause();
+  $("lobbyStart").disabled=true; $("lobbyStart").textContent="Songs werden geladen…";
+  const pool=await NET.poolP;
+  if(!Array.isArray(pool)||pool.length<3){alert((pool&&pool.message)||"Zu wenige Songs gefunden.");NET.poolP=buildPool().catch(e=>e);renderLobby();return;}
+  shuffle(pool);
+  G={pool,players:NET.players,round:0,total:Math.min(S.rounds,pool.length),chals:[...S.chals]};
+  startRound();
+};
+$("lobbyBack").onclick=()=>{if(NET.peer){NET.peer.destroy();NET.peer=null;}NET.players=[];NET.conns=new Map();show("setup");};
+
+// ---------- Online: Buzzer auf dem Team-Handy ----------
+function initBuzzer(code){
+  show("buzzer"); $("bCode").textContent=code;
+  let cid=null; try{cid=localStorage.getItem("ow_cid");}catch(e){}
+  if(!cid){cid=Math.random().toString(36).slice(2,10);try{localStorage.setItem("ow_cid",cid);}catch(e){}}
+  try{$("bName").value=localStorage.getItem("ow_name")||"";}catch(e){}
+  let peer=null,conn=null,st=null,name="",prev=null,retry=null;
+  const joined=()=>!$("bPlay").classList.contains("hide");
+  function msg(m){if(joined())$("bMsg").textContent=m;else $("bJoinMsg").textContent=m;}
+  function connect(){
+    clearTimeout(retry);
+    if(!peer||peer.destroyed){
+      peer=new Peer(PEER_OPTS);
+      peer.on("open",open);
+      peer.on("error",e=>{
+        if(e.type==="peer-unavailable"){ if(joined()){msg("Moderator nicht erreichbar, versuche erneut…");retry=setTimeout(open,3000);} else {msg("Raum "+code+" nicht gefunden. Code prüfen.");$("bJoinBtn").disabled=false;} }
+        else {msg("Verbindungsproblem ("+e.type+"). Versuche erneut…");retry=setTimeout(()=>{peer.destroy();connect();},3000);}
+      });
+      peer.on("disconnected",()=>setTimeout(()=>{try{if(!peer.destroyed)peer.reconnect();}catch(e){}},2000));
+    }else open();
+  }
+  function open(){
+    if(conn&&conn.open)return;
+    conn=peer.connect(PREFIX+code.toLowerCase(),{reliable:true});
+    conn.on("open",()=>conn.send({t:"join",name,cid}));
+    conn.on("data",d=>{if(d&&d.t==="full"){msg("Der Raum ist voll (max. 8 Teams).");return;} if(d&&d.t==="state"){st=d;render();}});
+    conn.on("close",()=>{$("bBtn").disabled=true;msg("Verbindung weg, verbinde neu…");retry=setTimeout(open,1500);});
+  }
+  function render(){
+    $("bJoin").classList.add("hide"); $("bPlay").classList.remove("hide");
+    $("bTeam").textContent=st.name; $("bTeam").style.color=st.color; $("bPts").textContent=st.pts+(st.pts===1?" Punkt":" Punkte");
+    const b=$("bBtn"); b.style.background=st.color; b.disabled=!(st.phase==="playing"&&!st.locked); b.style.filter=(st.phase==="buzzed"&&st.buzzed.me)?"none":""; b.textContent=(st.phase==="buzzed"&&st.buzzed.me)?"DRAN!":"BUZZ";
+    let m="";
+    if(st.phase==="lobby") m="Ihr seid drin! Wartet auf den Start.";
+    else if(st.phase==="playing") m=st.locked?"Falsch. Ihr seid für diesen Song raus.":`Song ${st.round} von ${st.total}. Hört genau hin!`;
+    else if(st.phase==="buzzed") m=st.buzzed.me?"Ihr seid dran! Sagt die Antwort.":`${st.buzzed.name} antwortet…`;
+    else if(st.phase==="reveal") m=st.last?`${st.last.msg}\n${st.last.title} von ${st.last.artist}`:"";
+    else if(st.phase==="end") m="Spiel vorbei!";
+    $("bMsg").innerText=m;
+    if(st.phase==="buzzed"&&st.buzzed.me&&prev!=="buzzed"&&navigator.vibrate)navigator.vibrate([80,60,80]);
+    prev=st.phase;
+    $("bScores").innerHTML=[...st.scores].sort((a,b)=>b.pts-a.pts).map(p=>`<div style="border-color:${p.color}">${esc(p.name)}: ${p.pts}</div>`).join("");
+  }
+  $("bBtn").addEventListener("pointerdown",e=>{
+    e.preventDefault(); const b=$("bBtn"); if(b.disabled||!conn||!conn.open)return;
+    conn.send({t:"buzz"}); b.disabled=true; $("bMsg").textContent="Gebuzzert!"; if(navigator.vibrate)navigator.vibrate(60);
+  });
+  $("bJoinBtn").onclick=()=>{
+    if(!window.Peer){msg("Konnte nicht laden. Seite neu öffnen.");return;}
+    name=$("bName").value.trim()||"Team"; try{localStorage.setItem("ow_name",name);}catch(e){}
+    $("bJoinBtn").disabled=true; msg("Verbinde…"); connect();
+  };
+  $("bName").addEventListener("keydown",e=>{if(e.key==="Enter")$("bJoinBtn").click();});
+}
+const ROOM=new URLSearchParams(location.search).get("r");
+if(ROOM) initBuzzer(ROOM.toUpperCase().replace(/[^A-Z]/g,"").slice(0,4));
+</script>
+</body>
+</html>
